@@ -30,8 +30,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Component;
 import java.awt.event.MouseMotionAdapter;
+import javax.swing.JTabbedPane;
+import javax.swing.JInternalFrame;
 
-public class Princp extends JFrame {
+public class Cliente extends JFrame {
 
 	private JPanel contentPane;
 	private JLabel fondo;
@@ -42,6 +44,13 @@ public class Princp extends JFrame {
 	private boolean estado;
 	private Point initialClick;
 	private Usersettings usr = new Usersettings();
+	private JPanel panelProyectos;
+	private JPanel panelPartes;
+	private JLabel lblNewLabel;
+	private JLabel lblNewLabel_1;
+	private JLabel home;
+	private JLabel lblListadoProyectos;
+	private JLabel lblListadoPartes;
 
 	/**
 	 * Launch the application.
@@ -50,7 +59,7 @@ public class Princp extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Princp frame = new Princp();
+					Cliente frame = new Cliente();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -62,7 +71,7 @@ public class Princp extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Princp() {
+	public Cliente() {
 		initApp();
 	}
 	
@@ -78,6 +87,23 @@ public class Princp extends JFrame {
 		
 		min = new JLabel("New label");
 		min.addMouseListener(new MinMouseListener());
+		
+		lblListadoProyectos = new JLabel("Listado Proyectos");
+		lblListadoProyectos.setHorizontalAlignment(SwingConstants.CENTER);
+		lblListadoProyectos.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblListadoProyectos.setBounds(40, 0, 170, 43);
+		contentPane.add(lblListadoProyectos);
+		
+		lblListadoPartes = new JLabel("Listado Partes");
+		lblListadoPartes.setHorizontalAlignment(SwingConstants.CENTER);
+		lblListadoPartes.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblListadoPartes.setBounds(210, 0, 170, 43);
+		contentPane.add(lblListadoPartes);
+		
+		home = new JLabel("");
+		home.addMouseListener(new HomeMouseListener());
+		home.setBounds(10, 11, 20, 20);
+		contentPane.add(home);
 		min.setBounds(1150, 11, 20, 20);
 		contentPane.add(min);
 		
@@ -97,6 +123,24 @@ public class Princp extends JFrame {
 		movebar.setBounds(0, 0, 1280, 43);
 		contentPane.add(movebar);
 		
+		panelPartes = new JPanel();
+		panelPartes.setBounds(0, 54, 1280, 666);
+		panelPartes.setOpaque(false);
+		contentPane.add(panelPartes);
+		
+		lblNewLabel_1 = new JLabel("Panel Partes");
+		panelPartes.add(lblNewLabel_1);
+		
+		panelProyectos = new JPanel();
+		panelProyectos.setBounds(0, 54, 1280, 666);
+		contentPane.add(panelProyectos);
+		panelProyectos.setOpaque(false);
+		panelProyectos.setLayout(null);
+		
+		lblNewLabel = new JLabel("Panel Proyectos");
+		lblNewLabel.setBounds(545, 92, 46, 14);
+		panelProyectos.add(lblNewLabel);
+		
 		fondo = new JLabel("");
 		fondo.setBounds(0, 0, 1280, 720);
 		contentPane.add(fondo);
@@ -110,6 +154,9 @@ public class Princp extends JFrame {
 		}
 		fondo.setFocusable(true);
 		fondo.requestFocus();
+		
+		panelPartes.setVisible(false);
+		panelProyectos.setVisible(false);
 	}
 	
 	private void establecerContrasteOcs() {
@@ -118,6 +165,9 @@ public class Princp extends JFrame {
 		exit.setIcon(new ImageIcon(".\\rsrc\\x_w.png"));
 		contr.setIcon(new ImageIcon(".\\rsrc\\ccircle_w.png"));
 		movebar.setIcon(new ImageIcon(".\\rsrc\\underline_w.png"));
+		home.setIcon(new ImageIcon(".\\rsrc\\home_w.png"));
+		lblListadoProyectos.setForeground(Color.WHITE);
+		lblListadoPartes.setForeground(Color.WHITE);
 	}
 	private void establecerContrasteBri() {
 		fondo.setIcon(new ImageIcon(".\\rsrc\\day.jpg"));
@@ -125,6 +175,9 @@ public class Princp extends JFrame {
 		exit.setIcon(new ImageIcon(".\\rsrc\\x.png"));
 		contr.setIcon(new ImageIcon(".\\rsrc\\ccircle.png"));
 		movebar.setIcon(new ImageIcon(".\\rsrc\\underline.png"));
+		home.setIcon(new ImageIcon(".\\rsrc\\home.png"));
+		lblListadoProyectos.setForeground(Color.BLACK);
+		lblListadoPartes.setForeground(Color.BLACK);
 	}
 	
 	private void cambiarContraste() {
@@ -176,6 +229,13 @@ public class Princp extends JFrame {
 			int X = thisX + xMoved;
 			int Y = thisY + yMoved;
 			setLocation(X, Y);
+		}
+	}
+	private class HomeMouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			panelPartes.setVisible(false);
+			panelProyectos.setVisible(false);
 		}
 	}
 }
