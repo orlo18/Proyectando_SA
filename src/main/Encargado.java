@@ -32,9 +32,13 @@ import java.awt.Component;
 import java.awt.event.MouseMotionAdapter;
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+
 import com.toedter.calendar.JDateChooser;
 import javax.swing.JComboBox;
 import javax.swing.JCheckBox;
+import javax.swing.JTable;
+import javax.swing.JScrollBar;
 
 @SuppressWarnings({ "unused", "serial" })
 public class Encargado extends JFrame {
@@ -301,6 +305,8 @@ public class Encargado extends JFrame {
 	private JComboBox comboxProyectoMoPa;
 	private JLabel lblFechaMoPa;
 	private JTextField txtFechaMoPa;
+	private JTable table;
+	private JTable table_1;
 	/**
 	 * Launch the application.
 	 */
@@ -625,6 +631,8 @@ public class Encargado extends JFrame {
 		lblTrabajosAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		lblTrabajosAnPa.setBounds(857, 368, 215, 30);
 		panelAnadirParte.add(lblTrabajosAnPa);
+		
+		
 		//
 		
 		//
@@ -1859,6 +1867,7 @@ public class Encargado extends JFrame {
 		lblAmpliarAnPr11.setVisible(false);
 		lblAmpliarAnPr12.setVisible(false);
 		limpiarPanels();
+		
 		
 	}
 	
