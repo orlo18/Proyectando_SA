@@ -17,19 +17,25 @@ import javax.swing.JMenuBar;
 import java.awt.Color;
 import javax.swing.border.BevelBorder;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.border.SoftBevelBorder;
 
-import statics.Usersettings;
+import inoutput.Database;
+import inoutput.Usersettings;
+import statics.Usuario;
 
 import java.awt.Font;
 import javax.swing.SwingConstants;
 import java.awt.SystemColor;
+import java.awt.TextField;
 import java.awt.Cursor;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Component;
 import java.awt.event.MouseMotionAdapter;
+import java.util.ArrayList;
+
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
 
@@ -52,6 +58,7 @@ public class Login extends JFrame {
 	private JButton btnEntrar;
 	private JLabel lblEye;
 	private boolean vista = false;
+	private Database db = new Database();
 	/**
 	 * Launch the application.
 	 */
@@ -94,6 +101,7 @@ public class Login extends JFrame {
 		contentPane.add(lblEye);
 		
 		btnEntrar = new JButton("Entrar");
+		btnEntrar.addMouseListener(new BtnEntrarMouseListener());
 		btnEntrar.setBounds(540, 430, 200, 30);
 		contentPane.add(btnEntrar);
 		
@@ -246,6 +254,29 @@ public class Login extends JFrame {
 			} else {
 				passwordField.setEchoChar((char) 0);
 				vista = true;
+			}
+		}
+	}
+	private class BtnEntrarMouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			boolean match=false;
+			ArrayList<Usuario> usus = db.devolverUsuarios();
+			String passwd = String.valueOf(passwordField.getPassword());
+			for (Usuario usu : usus) {
+				String passwdUsu = String.valueOf(usu.getContrasena());
+				if (passwd.equals(passwdUsu) && txtUsuario.getText().equals(usu.getLogin())) {
+					match = true;
+					break;
+				}
+			}
+			if (match) {
+				JOptionPane.showMessageDialog(null, "Bienvenido, " + txtUsuario.getText());
+				Main encargado = new Main();
+				encargado.setVisible(true);
+				dispose();
+			} else {
+				JOptionPane.showMessageDialog(null, "Error, este usuario no existe");
 			}
 		}
 	}

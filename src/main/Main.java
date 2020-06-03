@@ -7,6 +7,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import java.awt.Rectangle;
@@ -17,10 +19,9 @@ import javax.swing.JMenuBar;
 import java.awt.Color;
 import javax.swing.border.BevelBorder;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.border.SoftBevelBorder;
-
-import statics.Usersettings;
 
 import java.awt.Font;
 import javax.swing.SwingConstants;
@@ -30,18 +31,37 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Component;
 import java.awt.event.MouseMotionAdapter;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.regex.Matcher;
+
+import statics.Cliente;
+import statics.Empleado;
+import statics.Material_Peligroso;
+import statics.Proyecto;
+import java.util.regex.Pattern;
+
 import javax.swing.JTextField;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 
 import com.toedter.calendar.JDateChooser;
+
+import inoutput.Database;
+import inoutput.Usersettings;
+
 import javax.swing.JComboBox;
 import javax.swing.JCheckBox;
 import javax.swing.JTable;
 import javax.swing.JScrollBar;
-
-@SuppressWarnings({ "unused", "serial" })
-public class Encargado extends JFrame {
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+@SuppressWarnings({ "unused", "serial","unchecked","rawtypes" })
+public class Main extends JFrame {
 
 	private JPanel contentPane;
 	private JLabel fondo;
@@ -147,7 +167,6 @@ public class Encargado extends JFrame {
 	private JTextField txtJefeLsPr;
 	private JTextField txtFechaIniLsPr;
 	private JTextField txtMaterialLsPr;
-	private JDateChooser dateChooserFechaFinLsPr;
 	private JPanel panelAnadirParte;
 	private JLabel lblAnadirParteInt;
 	private JLabel lblProyectoAnPa;
@@ -291,7 +310,6 @@ public class Encargado extends JFrame {
 	private JLabel lblVehiculosLsPr;
 	private JLabel lblMaterialesLsPr;
 	private JLabel lblTrabajosLsPr;
-	private JCheckBox chckEmpleado;
 	private JLabel lblModificarParteInt;
 	private JLabel lblPersonalAnPa;
 	private JLabel lblVehiculosAnPa;
@@ -307,6 +325,26 @@ public class Encargado extends JFrame {
 	private JTextField txtFechaMoPa;
 	private JTable table;
 	private JTable table_1;
+	private Database db = new Database();
+	private Date diaHoy = Calendar.getInstance().getTime();
+	private String diaHoyString;
+	private JLabel lblProyectoLsPr;
+	private JComboBox comboxProyectoLsPr;
+	private JTextField txtFechaFinLsPr;
+	private ArrayList<Proyecto> vProyectos;
+	private ArrayList<Cliente> vClientes;
+	private ArrayList<Material_Peligroso> vMateriales;
+	private ArrayList<Empleado> vEncargados;
+	private ComboBoxModel modeloProyectos;
+	private ComboBoxModel modeloClientes;
+	private ComboBoxModel modeloMateriales;
+	private ComboBoxModel modeloEncargados;
+	private JButton btnEnviarAnPr;
+	private JButton btnEnviarAnPr_1;
+	private JButton btnEnviarAnPr_2;
+	private JLabel exitAnPr;
+	private boolean deshabilitarBoton = false;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -314,7 +352,7 @@ public class Encargado extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Encargado frame = new Encargado();
+					Main frame = new Main();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -326,9 +364,52 @@ public class Encargado extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Encargado() {
+	public Main() {
 		initApp();
-		
+		actualizarProyectos();
+	}
+	
+	
+	private void actualizarProyectos() {
+		vProyectos = db.devolverProyectos();
+		vClientes = db.devolverClientes();
+		vMateriales = db.devolverMaterial();
+		vEncargados = db.devolverEncargado();
+		modeloProyectos = new DefaultComboBoxModel(vProyectos.toArray());
+		modeloClientes = new DefaultComboBoxModel(vClientes.toArray());
+		modeloMateriales = new DefaultComboBoxModel(vMateriales.toArray());
+		modeloEncargados = new DefaultComboBoxModel(vEncargados.toArray());
+		comboxClienteAnPr.setModel(modeloClientes);
+		comboxMaterialTransportarAnPr.setModel(modeloMateriales);
+		comboxJefeAnPr.setModel(modeloEncargados);
+		comboxProyectoLsPr.setModel(modeloProyectos);
+		comboxProyectoAnPa.setModel(modeloProyectos);
+		comboxProyectoMoPa.setModel(modeloProyectos);
+		//Combox Personal
+		comboxPersonalAnPa1.setModel(modeloEncargados);;
+		comboxPersonalAnPa2.setModel(modeloEncargados);;
+		comboxPersonalAnPa3.setModel(modeloEncargados);;
+		comboxPersonalAnPr1.setModel(modeloEncargados);;
+		comboxPersonalAnPr2.setModel(modeloEncargados);;
+		comboxPersonalAnPr3.setModel(modeloEncargados);;
+		comboxMaterialesMoPa1.setModel(modeloEncargados);;
+		comboxMaterialesMoPa2.setModel(modeloEncargados);;
+		comboxMaterialesMoPa3.setModel(modeloEncargados);;
+		actualizarDatosLsPr();
+	}
+	
+	private void actualizarDatosLsPr() {
+		Proyecto pr = (Proyecto) comboxProyectoLsPr.getSelectedItem();
+		txtNombreProyectoLsPr.setText(pr.getNombre_proyecto());
+		txtJefeLsPr.setText(pr.getNombre_encargado());
+		txtClienteLsPr.setText(pr.getNombre_cliente());
+		txtFechaIniLsPr.setText(pr.getFecha_inicio());
+		txtFechaFinLsPr.setText(pr.getFecha_fin());
+		if (pr.getCod_material()==0) {
+			txtMaterialLsPr.setText("-");
+		} else {
+			txtMaterialLsPr.setText(Integer.toString(pr.getCod_material()));
+		}
 	}
 	
 	private void initApp() {
@@ -346,6 +427,737 @@ public class Encargado extends JFrame {
 		
 		lblAnadirUsuario = new JLabel("Añadir Usuario");
 		lblAnadirUsuario.addMouseListener(new LblAnadirUsuarioMouseListener());
+		
+		panelAnadirProyecto = new JPanel();
+		panelAnadirProyecto.setBounds(0, 54, 1280, 666);
+		panelAnadirProyecto.setOpaque(false);
+		contentPane.add(panelAnadirProyecto);
+		panelAnadirProyecto.setLayout(null);
+		
+		lblAnadirProyectoInt = new JLabel("Añadir Proyecto");
+		lblAnadirProyectoInt.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAnadirProyectoInt.setForeground(Color.WHITE);
+		lblAnadirProyectoInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
+		lblAnadirProyectoInt.setBounds(540, 50, 200, 43);
+		panelAnadirProyecto.add(lblAnadirProyectoInt);
+		
+		lblNombreProyectoAnPr = new JLabel("Nombre Proyecto:");
+		lblNombreProyectoAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNombreProyectoAnPr.setBounds(200, 180, 150, 30);
+		panelAnadirProyecto.add(lblNombreProyectoAnPr);
+		
+		lblClienteAnPr = new JLabel("Cliente:");
+		lblClienteAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblClienteAnPr.setBounds(200, 221, 150, 30);
+		panelAnadirProyecto.add(lblClienteAnPr);
+		
+		lblJefeProyectoAnPr = new JLabel("Jefe Proyecto:");
+		lblJefeProyectoAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblJefeProyectoAnPr.setBounds(200, 262, 150, 30);
+		panelAnadirProyecto.add(lblJefeProyectoAnPr);
+		
+		lblFechaInicioAnPr = new JLabel("Fecha Inicio:");
+		lblFechaInicioAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblFechaInicioAnPr.setBounds(750, 180, 150, 30);
+		panelAnadirProyecto.add(lblFechaInicioAnPr);
+		
+		lblMaterialTransportarAnPr = new JLabel("Material a Transportar:");
+		lblMaterialTransportarAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblMaterialTransportarAnPr.setBounds(750, 262, 150, 30);
+		panelAnadirProyecto.add(lblMaterialTransportarAnPr);
+		
+		dateChooserFechaInicioAnPr = new JDateChooser();
+		dateChooserFechaInicioAnPr.addPropertyChangeListener(new DateChooserFechaInicioAnPrPropertyChangeListener());
+		
+		dateChooserFechaFinAnPr = new JDateChooser();
+		dateChooserFechaFinAnPr.setBounds(910, 221, 150, 30);
+		panelAnadirProyecto.add(dateChooserFechaFinAnPr);
+		dateChooserFechaFinAnPr.setMinSelectableDate(diaHoy);
+		dateChooserFechaInicioAnPr.setBounds(910, 180, 150, 30);
+		panelAnadirProyecto.add(dateChooserFechaInicioAnPr);
+		
+		lblFechaFinAnPr = new JLabel("Fecha Fin");
+		lblFechaFinAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblFechaFinAnPr.setBounds(750, 221, 150, 30);
+		panelAnadirProyecto.add(lblFechaFinAnPr);
+		
+		comboxMaterialTransportarAnPr = new JComboBox();
+		comboxMaterialTransportarAnPr.setBounds(910, 262, 150, 30);
+		panelAnadirProyecto.add(comboxMaterialTransportarAnPr);
+		
+		comboxJefeAnPr = new JComboBox();
+		comboxJefeAnPr.setBounds(360, 262, 150, 30);
+		panelAnadirProyecto.add(comboxJefeAnPr);
+		
+		comboxClienteAnPr = new JComboBox();
+		comboxClienteAnPr.setBounds(360, 221, 150, 30);
+		panelAnadirProyecto.add(comboxClienteAnPr);
+		
+		textFieldNombreAnPr = new JTextField();
+		textFieldNombreAnPr.setBounds(360, 180, 150, 30);
+		panelAnadirProyecto.add(textFieldNombreAnPr);
+		textFieldNombreAnPr.setColumns(10);
+		
+		lblPersonalAnPr = new JLabel("Personal:");
+		lblPersonalAnPr.setHorizontalAlignment(SwingConstants.CENTER);
+		lblPersonalAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblPersonalAnPr.setBounds(200, 368, 215, 30);
+		panelAnadirProyecto.add(lblPersonalAnPr);
+		
+		lblVehiculosAnPr = new JLabel("Vehiculos:");
+		lblVehiculosAnPr.setHorizontalAlignment(SwingConstants.CENTER);
+		lblVehiculosAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblVehiculosAnPr.setBounds(415, 368, 215, 30);
+		panelAnadirProyecto.add(lblVehiculosAnPr);
+		
+		lblMaterialesAnPr = new JLabel("Materiales:");
+		lblMaterialesAnPr.setHorizontalAlignment(SwingConstants.CENTER);
+		lblMaterialesAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblMaterialesAnPr.setBounds(630, 368, 215, 30);
+		panelAnadirProyecto.add(lblMaterialesAnPr);
+		
+		lblTrabajosAnPr = new JLabel("Trabajos:");
+		lblTrabajosAnPr.setHorizontalAlignment(SwingConstants.CENTER);
+		lblTrabajosAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblTrabajosAnPr.setBounds(845, 368, 215, 30);
+		panelAnadirProyecto.add(lblTrabajosAnPr);
+		
+		comboxPersonalAnPr1 = new JComboBox();
+		comboxPersonalAnPr1.setBounds(220, 409, 175, 30);
+		panelAnadirProyecto.add(comboxPersonalAnPr1);
+		
+		txtCantidadPersonalAnPr1 = new JTextField();
+		txtCantidadPersonalAnPr1.setBounds(220, 450, 77, 30);
+		panelAnadirProyecto.add(txtCantidadPersonalAnPr1);
+		txtCantidadPersonalAnPr1.setColumns(10);
+		
+		txtImportePersonalAnPr1 = new JTextField();
+		txtImportePersonalAnPr1.setColumns(10);
+		txtImportePersonalAnPr1.setBounds(318, 450, 77, 30);
+		panelAnadirProyecto.add(txtImportePersonalAnPr1);
+		
+		comboxPersonalAnPr2 = new JComboBox();
+		comboxPersonalAnPr2.setBounds(220, 491, 175, 30);
+		panelAnadirProyecto.add(comboxPersonalAnPr2);
+		
+		txtCantidadPersonalAnPr2 = new JTextField();
+		txtCantidadPersonalAnPr2.setColumns(10);
+		txtCantidadPersonalAnPr2.setBounds(220, 532, 77, 30);
+		panelAnadirProyecto.add(txtCantidadPersonalAnPr2);
+		
+		txtImportePersonalAnPr2 = new JTextField();
+		txtImportePersonalAnPr2.setColumns(10);
+		txtImportePersonalAnPr2.setBounds(318, 532, 77, 30);
+		panelAnadirProyecto.add(txtImportePersonalAnPr2);
+		
+		comboxPersonalAnPr3 = new JComboBox();
+		comboxPersonalAnPr3.setBounds(220, 573, 175, 30);
+		panelAnadirProyecto.add(comboxPersonalAnPr3);
+		
+		txtCantidadPersonalAnPr3 = new JTextField();
+		txtCantidadPersonalAnPr3.setColumns(10);
+		txtCantidadPersonalAnPr3.setBounds(220, 614, 77, 30);
+		panelAnadirProyecto.add(txtCantidadPersonalAnPr3);
+		
+		txtImportePersonalAnPr3 = new JTextField();
+		txtImportePersonalAnPr3.setColumns(10);
+		txtImportePersonalAnPr3.setBounds(318, 614, 77, 30);
+		panelAnadirProyecto.add(txtImportePersonalAnPr3);
+		
+		comboxVehiculosAnPr1 = new JComboBox();
+		comboxVehiculosAnPr1.setBounds(435, 409, 175, 30);
+		panelAnadirProyecto.add(comboxVehiculosAnPr1);
+		
+		txtCantidadVehiculosAnPr1 = new JTextField();
+		txtCantidadVehiculosAnPr1.setColumns(10);
+		txtCantidadVehiculosAnPr1.setBounds(435, 450, 77, 30);
+		panelAnadirProyecto.add(txtCantidadVehiculosAnPr1);
+		
+		txtImporteVehiculosAnPr1 = new JTextField();
+		txtImporteVehiculosAnPr1.setColumns(10);
+		txtImporteVehiculosAnPr1.setBounds(533, 450, 77, 30);
+		panelAnadirProyecto.add(txtImporteVehiculosAnPr1);
+		
+		comboxVehiculosAnPr2 = new JComboBox();
+		comboxVehiculosAnPr2.setBounds(435, 491, 175, 30);
+		panelAnadirProyecto.add(comboxVehiculosAnPr2);
+		
+		txtCantidadVehiculosAnPr2 = new JTextField();
+		txtCantidadVehiculosAnPr2.setColumns(10);
+		txtCantidadVehiculosAnPr2.setBounds(435, 532, 77, 30);
+		panelAnadirProyecto.add(txtCantidadVehiculosAnPr2);
+		
+		txtImporteVehiculosAnPr2 = new JTextField();
+		txtImporteVehiculosAnPr2.setColumns(10);
+		txtImporteVehiculosAnPr2.setBounds(533, 532, 77, 30);
+		panelAnadirProyecto.add(txtImporteVehiculosAnPr2);
+		
+		comboxVehiculosAnPr3 = new JComboBox();
+		comboxVehiculosAnPr3.setBounds(435, 573, 175, 30);
+		panelAnadirProyecto.add(comboxVehiculosAnPr3);
+		
+		txtCantidadVehiculosAnPr3 = new JTextField();
+		txtCantidadVehiculosAnPr3.setColumns(10);
+		txtCantidadVehiculosAnPr3.setBounds(435, 614, 77, 30);
+		panelAnadirProyecto.add(txtCantidadVehiculosAnPr3);
+		
+		txtImporteVehiculosAnPr3 = new JTextField();
+		txtImporteVehiculosAnPr3.setColumns(10);
+		txtImporteVehiculosAnPr3.setBounds(533, 614, 77, 30);
+		panelAnadirProyecto.add(txtImporteVehiculosAnPr3);
+		
+		comboxMaterialesAnPr1 = new JComboBox();
+		comboxMaterialesAnPr1.setBounds(650, 409, 175, 30);
+		panelAnadirProyecto.add(comboxMaterialesAnPr1);
+		
+		txtCantidadMaterialesAnPr1 = new JTextField();
+		txtCantidadMaterialesAnPr1.setColumns(10);
+		txtCantidadMaterialesAnPr1.setBounds(650, 450, 77, 30);
+		panelAnadirProyecto.add(txtCantidadMaterialesAnPr1);
+		
+		txtImporteMaterialesAnPr1 = new JTextField();
+		txtImporteMaterialesAnPr1.setColumns(10);
+		txtImporteMaterialesAnPr1.setBounds(748, 450, 77, 30);
+		panelAnadirProyecto.add(txtImporteMaterialesAnPr1);
+		
+		comboxMaterialesAnPr2 = new JComboBox();
+		comboxMaterialesAnPr2.setBounds(650, 491, 175, 30);
+		panelAnadirProyecto.add(comboxMaterialesAnPr2);
+		
+		txtCantidadMaterialesAnPr2 = new JTextField();
+		txtCantidadMaterialesAnPr2.setColumns(10);
+		txtCantidadMaterialesAnPr2.setBounds(650, 532, 77, 30);
+		panelAnadirProyecto.add(txtCantidadMaterialesAnPr2);
+		
+		txtImporteMaterialesAnPr2 = new JTextField();
+		txtImporteMaterialesAnPr2.setColumns(10);
+		txtImporteMaterialesAnPr2.setBounds(748, 532, 77, 30);
+		panelAnadirProyecto.add(txtImporteMaterialesAnPr2);
+		
+		comboxMaterialesAnPr3 = new JComboBox();
+		comboxMaterialesAnPr3.setBounds(650, 573, 175, 30);
+		panelAnadirProyecto.add(comboxMaterialesAnPr3);
+		
+		txtCantidadMaterialesAnPr3 = new JTextField();
+		txtCantidadMaterialesAnPr3.setColumns(10);
+		txtCantidadMaterialesAnPr3.setBounds(650, 614, 77, 30);
+		panelAnadirProyecto.add(txtCantidadMaterialesAnPr3);
+		
+		txtImporteMaterialesAnPr3 = new JTextField();
+		txtImporteMaterialesAnPr3.setColumns(10);
+		txtImporteMaterialesAnPr3.setBounds(748, 614, 77, 30);
+		panelAnadirProyecto.add(txtImporteMaterialesAnPr3);
+		
+		comboxTrabajosAnPr1 = new JComboBox();
+		comboxTrabajosAnPr1.setBounds(865, 409, 175, 30);
+		panelAnadirProyecto.add(comboxTrabajosAnPr1);
+		
+		txtCantidadTrabajosAnPr1 = new JTextField();
+		txtCantidadTrabajosAnPr1.setColumns(10);
+		txtCantidadTrabajosAnPr1.setBounds(865, 450, 77, 30);
+		panelAnadirProyecto.add(txtCantidadTrabajosAnPr1);
+		
+		txtImporteTrabajosAnPr1 = new JTextField();
+		txtImporteTrabajosAnPr1.setColumns(10);
+		txtImporteTrabajosAnPr1.setBounds(963, 450, 77, 30);
+		panelAnadirProyecto.add(txtImporteTrabajosAnPr1);
+		
+		comboxTrabajosAnPr2 = new JComboBox();
+		comboxTrabajosAnPr2.setBounds(865, 491, 175, 30);
+		panelAnadirProyecto.add(comboxTrabajosAnPr2);
+		
+		txtCantidadTrabajosAnPr2 = new JTextField();
+		txtCantidadTrabajosAnPr2.setColumns(10);
+		txtCantidadTrabajosAnPr2.setBounds(865, 532, 77, 30);
+		panelAnadirProyecto.add(txtCantidadTrabajosAnPr2);
+		
+		txtImporteTrabajosAnPr2 = new JTextField();
+		txtImporteTrabajosAnPr2.setColumns(10);
+		txtImporteTrabajosAnPr2.setBounds(963, 532, 77, 30);
+		panelAnadirProyecto.add(txtImporteTrabajosAnPr2);
+		
+		comboxTrabajosAnPr3 = new JComboBox();
+		comboxTrabajosAnPr3.setBounds(865, 573, 175, 30);
+		panelAnadirProyecto.add(comboxTrabajosAnPr3);
+		
+		txtCantidadTrabajosAnPr3 = new JTextField();
+		txtCantidadTrabajosAnPr3.setColumns(10);
+		txtCantidadTrabajosAnPr3.setBounds(865, 614, 77, 30);
+		panelAnadirProyecto.add(txtCantidadTrabajosAnPr3);
+		
+		txtImporteTrabajosAnPr3 = new JTextField();
+		txtImporteTrabajosAnPr3.setColumns(10);
+		txtImporteTrabajosAnPr3.setBounds(963, 614, 77, 30);
+		panelAnadirProyecto.add(txtImporteTrabajosAnPr3);
+		
+		//
+		comboxPersonalAnPr1.setVisible(false);
+		txtCantidadPersonalAnPr1.setVisible(false);
+		txtImportePersonalAnPr1.setVisible(false);
+		comboxPersonalAnPr2.setVisible(false);
+		txtCantidadPersonalAnPr2.setVisible(false);
+		txtImportePersonalAnPr2.setVisible(false);
+		comboxPersonalAnPr3.setVisible(false);
+		txtCantidadPersonalAnPr3.setVisible(false);
+		txtImportePersonalAnPr3.setVisible(false);
+		comboxVehiculosAnPr1.setVisible(false);
+		txtCantidadVehiculosAnPr1.setVisible(false);
+		txtImporteVehiculosAnPr1.setVisible(false);
+		comboxVehiculosAnPr2.setVisible(false);
+		txtCantidadVehiculosAnPr2.setVisible(false);
+		txtImporteVehiculosAnPr2.setVisible(false);
+		comboxVehiculosAnPr3.setVisible(false);
+		txtCantidadVehiculosAnPr3.setVisible(false);
+		txtImporteVehiculosAnPr3.setVisible(false);
+		comboxMaterialesAnPr1.setVisible(false);
+		txtCantidadMaterialesAnPr1.setVisible(false);
+		txtImporteMaterialesAnPr1.setVisible(false);
+		comboxMaterialesAnPr2.setVisible(false);
+		txtCantidadMaterialesAnPr2.setVisible(false);
+		txtImporteMaterialesAnPr2.setVisible(false);
+		comboxMaterialesAnPr3.setVisible(false);
+		txtCantidadMaterialesAnPr3.setVisible(false);
+		txtImporteMaterialesAnPr3.setVisible(false);
+		comboxTrabajosAnPr1.setVisible(false);
+		txtCantidadTrabajosAnPr1.setVisible(false);
+		txtImporteTrabajosAnPr1.setVisible(false);
+		comboxTrabajosAnPr2.setVisible(false);
+		txtCantidadTrabajosAnPr2.setVisible(false);
+		txtImporteTrabajosAnPr2.setVisible(false);
+		comboxTrabajosAnPr3.setVisible(false);
+		txtCantidadTrabajosAnPr3.setVisible(false);
+		txtImporteTrabajosAnPr3.setVisible(false);
+		//
+		lblAmpliarAnPr1 = new JLabel("New label");
+		lblAmpliarAnPr1.addMouseListener(new LblAmpliarAnPr1MouseListener());
+		lblAmpliarAnPr1.setBounds(405, 409, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr1);
+		
+		lblAmpliarAnPr2 = new JLabel("New label");
+		lblAmpliarAnPr2.addMouseListener(new LblAmpliarAnPr2MouseListener());
+		lblAmpliarAnPr2.setBounds(405, 491, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr2);
+		
+		lblAmpliarAnPr3 = new JLabel("New label");
+		lblAmpliarAnPr3.addMouseListener(new LblAmpliarAnPr3MouseListener());
+		lblAmpliarAnPr3.setBounds(405, 573, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr3);
+		
+		lblAmpliarAnPr4 = new JLabel("New label");
+		lblAmpliarAnPr4.addMouseListener(new LblAmpliarAnPr4MouseListener());
+		lblAmpliarAnPr4.setBounds(620, 409, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr4);
+		
+		lblAmpliarAnPr5 = new JLabel("New label");
+		lblAmpliarAnPr5.addMouseListener(new LblAmpliarAnPr5MouseListener());
+		lblAmpliarAnPr5.setBounds(620, 491, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr5);
+		
+		lblAmpliarAnPr6 = new JLabel("New label");
+		lblAmpliarAnPr6.addMouseListener(new LblAmpliarAnPr6MouseListener());
+		lblAmpliarAnPr6.setBounds(620, 573, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr6);
+		
+		lblAmpliarAnPr7 = new JLabel("New label");
+		lblAmpliarAnPr7.addMouseListener(new LblAmpliarAnPr7MouseListener());
+		lblAmpliarAnPr7.setBounds(835, 409, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr7);
+		
+		lblAmpliarAnPr8 = new JLabel("New label");
+		lblAmpliarAnPr8.addMouseListener(new LblAmpliarAnPr8MouseListener());
+		lblAmpliarAnPr8.setBounds(835, 491, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr8);
+		
+		lblAmpliarAnPr9 = new JLabel("New label");
+		lblAmpliarAnPr9.addMouseListener(new LblAmpliarAnPr9MouseListener());
+		lblAmpliarAnPr9.setBounds(835, 573, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr9);
+		
+		lblAmpliarAnPr10 = new JLabel("New label");
+		lblAmpliarAnPr10.addMouseListener(new LblAmpliarAnPr10MouseListener());
+		lblAmpliarAnPr10.setBounds(1050, 409, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr10);
+		
+		lblAmpliarAnPr11 = new JLabel("New label");
+		lblAmpliarAnPr11.addMouseListener(new LblAmpliarAnPr11MouseListener());
+		lblAmpliarAnPr11.setBounds(1050, 491, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr11);
+		
+		lblAmpliarAnPr12 = new JLabel("New label");
+		lblAmpliarAnPr12.addMouseListener(new LblAmpliarAnPr12MouseListener());
+		lblAmpliarAnPr12.setBounds(1050, 573, 20, 20);
+		panelAnadirProyecto.add(lblAmpliarAnPr12);
+		
+		
+		lblAmpliarAnPr1.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr2.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr3.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr4.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr5.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr6.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr7.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr8.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr9.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr10.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr11.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		lblAmpliarAnPr12.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		
+		lblAmpliarAnPr2.setVisible(false);
+		lblAmpliarAnPr3.setVisible(false);
+		lblAmpliarAnPr5.setVisible(false);
+		lblAmpliarAnPr6.setVisible(false);
+		lblAmpliarAnPr8.setVisible(false);
+		lblAmpliarAnPr9.setVisible(false);
+		lblAmpliarAnPr11.setVisible(false);
+		lblAmpliarAnPr12.setVisible(false);
+		
+		dateChooserFechaInicioAnPr.setMinSelectableDate(diaHoy);
+		
+		btnEnviarAnPr = new JButton("Enviar");
+		btnEnviarAnPr.addMouseListener(new BtnEnviarAnPrMouseListener());
+		btnEnviarAnPr.setBounds(564, 120, 150, 30);
+		panelAnadirProyecto.add(btnEnviarAnPr);
+		
+		exitAnPr = new JLabel("New label");
+		exitAnPr.addMouseListener(new ExitAnPrMouseListener());
+		exitAnPr.setBounds(1070, 267, 20, 20);
+		panelAnadirProyecto.add(exitAnPr);
+		
+		panelModificarParte = new JPanel();
+		panelModificarParte.setBounds(0, 54, 1280, 666);
+		contentPane.add(panelModificarParte);
+		panelModificarParte.setLayout(null);
+		panelModificarParte.setOpaque(false);
+		
+		comboxPersonalMoPa1 = new JComboBox();
+		comboxPersonalMoPa1.setBounds(220, 409, 175, 30);
+		panelModificarParte.add(comboxPersonalMoPa1);
+		
+		txtCantidadPersonalMoPa1 = new JTextField();
+		txtCantidadPersonalMoPa1.setColumns(10);
+		txtCantidadPersonalMoPa1.setBounds(220, 450, 77, 30);
+		panelModificarParte.add(txtCantidadPersonalMoPa1);
+		
+		txtImportePersonalMoPa1 = new JTextField();
+		txtImportePersonalMoPa1.setColumns(10);
+		txtImportePersonalMoPa1.setBounds(318, 450, 77, 30);
+		panelModificarParte.add(txtImportePersonalMoPa1);
+		
+		comboxPersonalMoPa2 = new JComboBox();
+		comboxPersonalMoPa2.setBounds(220, 491, 175, 30);
+		panelModificarParte.add(comboxPersonalMoPa2);
+		
+		txtCantidadPersonalMoPa2 = new JTextField();
+		txtCantidadPersonalMoPa2.setColumns(10);
+		txtCantidadPersonalMoPa2.setBounds(220, 532, 77, 30);
+		panelModificarParte.add(txtCantidadPersonalMoPa2);
+		
+		txtImportePersonalMoPa2 = new JTextField();
+		txtImportePersonalMoPa2.setColumns(10);
+		txtImportePersonalMoPa2.setBounds(318, 532, 77, 30);
+		panelModificarParte.add(txtImportePersonalMoPa2);
+		
+		comboxPersonalMoPa3 = new JComboBox();
+		comboxPersonalMoPa3.setBounds(220, 573, 175, 30);
+		panelModificarParte.add(comboxPersonalMoPa3);
+		
+		txtCantidadPersonalMoPa3 = new JTextField();
+		txtCantidadPersonalMoPa3.setColumns(10);
+		txtCantidadPersonalMoPa3.setBounds(220, 614, 77, 30);
+		panelModificarParte.add(txtCantidadPersonalMoPa3);
+		
+		txtImportePersonalMoPa3 = new JTextField();
+		txtImportePersonalMoPa3.setColumns(10);
+		txtImportePersonalMoPa3.setBounds(318, 614, 77, 30);
+		panelModificarParte.add(txtImportePersonalMoPa3);
+		
+		comboxVehiculosMoPa1 = new JComboBox();
+		comboxVehiculosMoPa1.setBounds(435, 409, 175, 30);
+		panelModificarParte.add(comboxVehiculosMoPa1);
+		
+		txtCantidadVehiculosMoPa1 = new JTextField();
+		txtCantidadVehiculosMoPa1.setColumns(10);
+		txtCantidadVehiculosMoPa1.setBounds(435, 450, 77, 30);
+		panelModificarParte.add(txtCantidadVehiculosMoPa1);
+		
+		txtImporteVehiculosMoPa1 = new JTextField();
+		txtImporteVehiculosMoPa1.setColumns(10);
+		txtImporteVehiculosMoPa1.setBounds(533, 450, 77, 30);
+		panelModificarParte.add(txtImporteVehiculosMoPa1);
+		
+		comboxVehiculosMoPa2 = new JComboBox();
+		comboxVehiculosMoPa2.setBounds(435, 491, 175, 30);
+		panelModificarParte.add(comboxVehiculosMoPa2);
+		
+		txtCantidadVehiculosMoPa2 = new JTextField();
+		txtCantidadVehiculosMoPa2.setColumns(10);
+		txtCantidadVehiculosMoPa2.setBounds(435, 532, 77, 30);
+		panelModificarParte.add(txtCantidadVehiculosMoPa2);
+		
+		txtImporteVehiculosMoPa2 = new JTextField();
+		txtImporteVehiculosMoPa2.setColumns(10);
+		txtImporteVehiculosMoPa2.setBounds(533, 532, 77, 30);
+		panelModificarParte.add(txtImporteVehiculosMoPa2);
+		
+		comboxVehiculosMoPa3 = new JComboBox();
+		comboxVehiculosMoPa3.setBounds(435, 573, 175, 30);
+		panelModificarParte.add(comboxVehiculosMoPa3);
+		
+		txtCantidadVehiculosMoPa3 = new JTextField();
+		txtCantidadVehiculosMoPa3.setColumns(10);
+		txtCantidadVehiculosMoPa3.setBounds(435, 614, 77, 30);
+		panelModificarParte.add(txtCantidadVehiculosMoPa3);
+		
+		txtImporteVehiculosMoPa3 = new JTextField();
+		txtImporteVehiculosMoPa3.setColumns(10);
+		txtImporteVehiculosMoPa3.setBounds(533, 614, 77, 30);
+		panelModificarParte.add(txtImporteVehiculosMoPa3);
+		
+		comboxMaterialesMoPa1 = new JComboBox();
+		comboxMaterialesMoPa1.setBounds(650, 409, 175, 30);
+		panelModificarParte.add(comboxMaterialesMoPa1);
+		
+		txtCantidadMaterialesMoPa1 = new JTextField();
+		txtCantidadMaterialesMoPa1.setColumns(10);
+		txtCantidadMaterialesMoPa1.setBounds(650, 450, 77, 30);
+		panelModificarParte.add(txtCantidadMaterialesMoPa1);
+		
+		txtImporteMaterialesMoPa1 = new JTextField();
+		txtImporteMaterialesMoPa1.setColumns(10);
+		txtImporteMaterialesMoPa1.setBounds(748, 450, 77, 30);
+		panelModificarParte.add(txtImporteMaterialesMoPa1);
+		
+		comboxMaterialesMoPa2 = new JComboBox();
+		comboxMaterialesMoPa2.setBounds(650, 491, 175, 30);
+		panelModificarParte.add(comboxMaterialesMoPa2);
+		
+		txtCantidadMaterialesMoPa2 = new JTextField();
+		txtCantidadMaterialesMoPa2.setColumns(10);
+		txtCantidadMaterialesMoPa2.setBounds(650, 532, 77, 30);
+		panelModificarParte.add(txtCantidadMaterialesMoPa2);
+		
+		txtImporteMaterialesMoPa2 = new JTextField();
+		txtImporteMaterialesMoPa2.setColumns(10);
+		txtImporteMaterialesMoPa2.setBounds(748, 532, 77, 30);
+		panelModificarParte.add(txtImporteMaterialesMoPa2);
+		
+		comboxMaterialesMoPa3 = new JComboBox();
+		comboxMaterialesMoPa3.setBounds(650, 573, 175, 30);
+		panelModificarParte.add(comboxMaterialesMoPa3);
+		
+		txtCantidadMaterialesMoPa3 = new JTextField();
+		txtCantidadMaterialesMoPa3.setColumns(10);
+		txtCantidadMaterialesMoPa3.setBounds(650, 614, 77, 30);
+		panelModificarParte.add(txtCantidadMaterialesMoPa3);
+		
+		txtImporteMaterialesMoPa3 = new JTextField();
+		txtImporteMaterialesMoPa3.setColumns(10);
+		txtImporteMaterialesMoPa3.setBounds(748, 614, 77, 30);
+		panelModificarParte.add(txtImporteMaterialesMoPa3);
+		
+		comboxTrabajosMoPa1 = new JComboBox();
+		comboxTrabajosMoPa1.setBounds(865, 409, 175, 30);
+		panelModificarParte.add(comboxTrabajosMoPa1);
+		
+		txtCantidadTrabajosMoPa1 = new JTextField();
+		txtCantidadTrabajosMoPa1.setColumns(10);
+		txtCantidadTrabajosMoPa1.setBounds(865, 450, 77, 30);
+		panelModificarParte.add(txtCantidadTrabajosMoPa1);
+		
+		txtImporteTrabajosMoPa1 = new JTextField();
+		txtImporteTrabajosMoPa1.setColumns(10);
+		txtImporteTrabajosMoPa1.setBounds(963, 450, 77, 30);
+		panelModificarParte.add(txtImporteTrabajosMoPa1);
+		
+		comboxTrabajosMoPa2 = new JComboBox();
+		comboxTrabajosMoPa2.setBounds(865, 491, 175, 30);
+		panelModificarParte.add(comboxTrabajosMoPa2);
+		
+		txtCantidadTrabajosMoPa2 = new JTextField();
+		txtCantidadTrabajosMoPa2.setColumns(10);
+		txtCantidadTrabajosMoPa2.setBounds(865, 532, 77, 30);
+		panelModificarParte.add(txtCantidadTrabajosMoPa2);
+		
+		txtImporteTrabajosMoPa2 = new JTextField();
+		txtImporteTrabajosMoPa2.setColumns(10);
+		txtImporteTrabajosMoPa2.setBounds(963, 532, 77, 30);
+		panelModificarParte.add(txtImporteTrabajosMoPa2);
+		
+		comboxTrabajosMoPa3 = new JComboBox();
+		comboxTrabajosMoPa3.setBounds(865, 573, 175, 30);
+		panelModificarParte.add(comboxTrabajosMoPa3);
+		
+		txtCantidadTrabajosMoPa3 = new JTextField();
+		txtCantidadTrabajosMoPa3.setColumns(10);
+		txtCantidadTrabajosMoPa3.setBounds(865, 614, 77, 30);
+		panelModificarParte.add(txtCantidadTrabajosMoPa3);
+		
+		txtImporteTrabajosMoPa3 = new JTextField();
+		txtImporteTrabajosMoPa3.setColumns(10);
+		txtImporteTrabajosMoPa3.setBounds(963, 614, 77, 30);
+		panelModificarParte.add(txtImporteTrabajosMoPa3);
+		
+		lblAmpliarMoPa1 = new JLabel("New label");
+		lblAmpliarMoPa1.addMouseListener(new LblAmpliarMoPa1MouseListener());
+		lblAmpliarMoPa1.setBounds(405, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa1);
+		
+		lblAmpliarMoPa2 = new JLabel("New label");
+		lblAmpliarMoPa2.addMouseListener(new LblAmpliarMoPa2MouseListener());
+		lblAmpliarMoPa2.setBounds(405, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa2);
+		
+		lblAmpliarMoPa3 = new JLabel("New label");
+		lblAmpliarMoPa3.addMouseListener(new LblAmpliarMoPa3MouseListener());
+		lblAmpliarMoPa3.setBounds(405, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa3);
+		
+		lblAmpliarMoPa4 = new JLabel("New label");
+		lblAmpliarMoPa4.addMouseListener(new LblAmpliarMoPa4MouseListener());
+		lblAmpliarMoPa4.setBounds(620, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa4);
+		
+		lblAmpliarMoPa5 = new JLabel("New label");
+		lblAmpliarMoPa5.addMouseListener(new LblAmpliarMoPa5MouseListener());
+		lblAmpliarMoPa5.setBounds(620, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa5);
+		
+		lblAmpliarMoPa6 = new JLabel("New label");
+		lblAmpliarMoPa6.addMouseListener(new LblAmpliarMoPa6MouseListener());
+		lblAmpliarMoPa6.setBounds(620, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa6);
+		
+		lblAmpliarMoPa7 = new JLabel("New label");
+		lblAmpliarMoPa7.addMouseListener(new LblAmpliarMoPa7MouseListener());
+		lblAmpliarMoPa7.setBounds(835, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa7);
+		
+		lblAmpliarMoPa8 = new JLabel("New label");
+		lblAmpliarMoPa8.addMouseListener(new LblAmpliarMoPa8MouseListener());
+		lblAmpliarMoPa8.setBounds(835, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa8);
+		
+		lblAmpliarMoPa9 = new JLabel("New label");
+		lblAmpliarMoPa9.addMouseListener(new LblAmpliarMoPa9MouseListener());
+		lblAmpliarMoPa9.setBounds(835, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa9);
+		
+		lblAmpliarMoPa10 = new JLabel("New label");
+		lblAmpliarMoPa10.addMouseListener(new LblAmpliarMoPa10MouseListener());
+		lblAmpliarMoPa10.setBounds(1050, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa10);
+		
+		lblAmpliarMoPa11 = new JLabel("New label");
+		lblAmpliarMoPa11.addMouseListener(new LblAmpliarMoPa11MouseListener());
+		lblAmpliarMoPa11.setBounds(1050, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa11);
+		
+		lblAmpliarMoPa12 = new JLabel("New label");
+		lblAmpliarMoPa12.addMouseListener(new LblAmpliarMoPa12MouseListener());
+		lblAmpliarMoPa12.setBounds(1050, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa12);
+		
+		lblModificarParteInt = new JLabel("Modificar Parte");
+		lblModificarParteInt.setHorizontalAlignment(SwingConstants.CENTER);
+		lblModificarParteInt.setForeground(Color.WHITE);
+		lblModificarParteInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
+		lblModificarParteInt.setBounds(525, 50, 230, 43);
+		panelModificarParte.add(lblModificarParteInt);
+		
+		lblPersonalMoPa = new JLabel("Personal:");
+		lblPersonalMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblPersonalMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblPersonalMoPa.setBounds(200, 368, 215, 30);
+		panelModificarParte.add(lblPersonalMoPa);
+		
+		lblVehiculosMoPa = new JLabel("Vehiculos:");
+		lblVehiculosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblVehiculosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblVehiculosMoPa.setBounds(415, 368, 215, 30);
+		panelModificarParte.add(lblVehiculosMoPa);
+		
+		lblMaterialesMoPa = new JLabel("Materiales:");
+		lblMaterialesMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblMaterialesMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblMaterialesMoPa.setBounds(630, 368, 215, 30);
+		panelModificarParte.add(lblMaterialesMoPa);
+		
+		lblTrabajosMoPa = new JLabel("Trabajos:");
+		lblTrabajosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblTrabajosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblTrabajosMoPa.setBounds(845, 368, 215, 30);
+		panelModificarParte.add(lblTrabajosMoPa);
+		
+		lblProyectoMoPa = new JLabel("Proyecto:");
+		lblProyectoMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblProyectoMoPa.setBounds(200, 180, 150, 30);
+		panelModificarParte.add(lblProyectoMoPa);
+		
+		comboxProyectoMoPa = new JComboBox();
+		comboxProyectoMoPa.setBounds(360, 180, 150, 30);
+		panelModificarParte.add(comboxProyectoMoPa);
+		
+		lblFechaMoPa = new JLabel("Fecha:");
+		lblFechaMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblFechaMoPa.setBounds(750, 180, 150, 30);
+		panelModificarParte.add(lblFechaMoPa);
+		
+		txtFechaMoPa = new JTextField();
+		txtFechaMoPa.setEditable(false);
+		txtFechaMoPa.setColumns(10);
+		txtFechaMoPa.setBounds(910, 180, 150, 30);
+		panelModificarParte.add(txtFechaMoPa);
+		
+		comboxPersonalMoPa1.setVisible(false);
+		txtCantidadPersonalMoPa1.setVisible(false);
+		txtImportePersonalMoPa1.setVisible(false);
+		comboxPersonalMoPa2.setVisible(false);
+		txtCantidadPersonalMoPa2.setVisible(false);
+		txtImportePersonalMoPa2.setVisible(false);
+		comboxPersonalMoPa3.setVisible(false);
+		txtCantidadPersonalMoPa3.setVisible(false);
+		txtImportePersonalMoPa3.setVisible(false);
+		comboxVehiculosMoPa1.setVisible(false);
+		txtCantidadVehiculosMoPa1.setVisible(false);
+		txtImporteVehiculosMoPa1.setVisible(false);
+		comboxVehiculosMoPa2.setVisible(false);
+		txtCantidadVehiculosMoPa2.setVisible(false);
+		txtImporteVehiculosMoPa2.setVisible(false);
+		comboxVehiculosMoPa3.setVisible(false);
+		txtCantidadVehiculosMoPa3.setVisible(false);
+		txtImporteVehiculosMoPa3.setVisible(false);
+		comboxMaterialesMoPa1.setVisible(false);
+		txtCantidadMaterialesMoPa1.setVisible(false);
+		txtImporteMaterialesMoPa1.setVisible(false);
+		comboxMaterialesMoPa2.setVisible(false);
+		txtCantidadMaterialesMoPa2.setVisible(false);
+		txtImporteMaterialesMoPa2.setVisible(false);
+		comboxMaterialesMoPa3.setVisible(false);
+		txtCantidadMaterialesMoPa3.setVisible(false);
+		txtImporteMaterialesMoPa3.setVisible(false);
+		comboxTrabajosMoPa1.setVisible(false);
+		txtCantidadTrabajosMoPa1.setVisible(false);
+		txtImporteTrabajosMoPa1.setVisible(false);
+		comboxTrabajosMoPa2.setVisible(false);
+		txtCantidadTrabajosMoPa2.setVisible(false);
+		txtImporteTrabajosMoPa2.setVisible(false);
+		comboxTrabajosMoPa3.setVisible(false);
+		txtCantidadTrabajosMoPa3.setVisible(false);
+		txtImporteTrabajosMoPa3.setVisible(false);
+		
+		lblAmpliarMoPa2.setVisible(false);
+		lblAmpliarMoPa3.setVisible(false);
+		lblAmpliarMoPa5.setVisible(false);
+		lblAmpliarMoPa6.setVisible(false);
+		lblAmpliarMoPa8.setVisible(false);
+		lblAmpliarMoPa9.setVisible(false);
+		lblAmpliarMoPa11.setVisible(false);
+		lblAmpliarMoPa12.setVisible(false);
+		txtFechaMoPa.setText(diaHoyString);
+		
+		btnEnviarAnPr_2 = new JButton("Enviar");
+		btnEnviarAnPr_2.setBounds(564, 120, 150, 30);
+		panelModificarParte.add(btnEnviarAnPr_2);
 		
 		panelAnadirParte = new JPanel();
 		panelAnadirParte.setBounds(-12, 54, 1292, 666);
@@ -682,812 +1494,12 @@ public class Encargado extends JFrame {
 		lblAmpliarAnPa11.setVisible(false);
 		lblAmpliarAnPa12.setVisible(false);
 		
-		panelModificarParte = new JPanel();
-		panelModificarParte.setBounds(0, 54, 1280, 666);
-		contentPane.add(panelModificarParte);
-		panelModificarParte.setLayout(null);
-		panelModificarParte.setOpaque(false);
-		
-		comboxPersonalMoPa1 = new JComboBox();
-		comboxPersonalMoPa1.setBounds(220, 409, 175, 30);
-		panelModificarParte.add(comboxPersonalMoPa1);
-		
-		txtCantidadPersonalMoPa1 = new JTextField();
-		txtCantidadPersonalMoPa1.setColumns(10);
-		txtCantidadPersonalMoPa1.setBounds(220, 450, 77, 30);
-		panelModificarParte.add(txtCantidadPersonalMoPa1);
-		
-		txtImportePersonalMoPa1 = new JTextField();
-		txtImportePersonalMoPa1.setColumns(10);
-		txtImportePersonalMoPa1.setBounds(318, 450, 77, 30);
-		panelModificarParte.add(txtImportePersonalMoPa1);
-		
-		comboxPersonalMoPa2 = new JComboBox();
-		comboxPersonalMoPa2.setBounds(220, 491, 175, 30);
-		panelModificarParte.add(comboxPersonalMoPa2);
-		
-		txtCantidadPersonalMoPa2 = new JTextField();
-		txtCantidadPersonalMoPa2.setColumns(10);
-		txtCantidadPersonalMoPa2.setBounds(220, 532, 77, 30);
-		panelModificarParte.add(txtCantidadPersonalMoPa2);
-		
-		txtImportePersonalMoPa2 = new JTextField();
-		txtImportePersonalMoPa2.setColumns(10);
-		txtImportePersonalMoPa2.setBounds(318, 532, 77, 30);
-		panelModificarParte.add(txtImportePersonalMoPa2);
-		
-		comboxPersonalMoPa3 = new JComboBox();
-		comboxPersonalMoPa3.setBounds(220, 573, 175, 30);
-		panelModificarParte.add(comboxPersonalMoPa3);
-		
-		txtCantidadPersonalMoPa3 = new JTextField();
-		txtCantidadPersonalMoPa3.setColumns(10);
-		txtCantidadPersonalMoPa3.setBounds(220, 614, 77, 30);
-		panelModificarParte.add(txtCantidadPersonalMoPa3);
-		
-		txtImportePersonalMoPa3 = new JTextField();
-		txtImportePersonalMoPa3.setColumns(10);
-		txtImportePersonalMoPa3.setBounds(318, 614, 77, 30);
-		panelModificarParte.add(txtImportePersonalMoPa3);
-		
-		comboxVehiculosMoPa1 = new JComboBox();
-		comboxVehiculosMoPa1.setBounds(435, 409, 175, 30);
-		panelModificarParte.add(comboxVehiculosMoPa1);
-		
-		txtCantidadVehiculosMoPa1 = new JTextField();
-		txtCantidadVehiculosMoPa1.setColumns(10);
-		txtCantidadVehiculosMoPa1.setBounds(435, 450, 77, 30);
-		panelModificarParte.add(txtCantidadVehiculosMoPa1);
-		
-		txtImporteVehiculosMoPa1 = new JTextField();
-		txtImporteVehiculosMoPa1.setColumns(10);
-		txtImporteVehiculosMoPa1.setBounds(533, 450, 77, 30);
-		panelModificarParte.add(txtImporteVehiculosMoPa1);
-		
-		comboxVehiculosMoPa2 = new JComboBox();
-		comboxVehiculosMoPa2.setBounds(435, 491, 175, 30);
-		panelModificarParte.add(comboxVehiculosMoPa2);
-		
-		txtCantidadVehiculosMoPa2 = new JTextField();
-		txtCantidadVehiculosMoPa2.setColumns(10);
-		txtCantidadVehiculosMoPa2.setBounds(435, 532, 77, 30);
-		panelModificarParte.add(txtCantidadVehiculosMoPa2);
-		
-		txtImporteVehiculosMoPa2 = new JTextField();
-		txtImporteVehiculosMoPa2.setColumns(10);
-		txtImporteVehiculosMoPa2.setBounds(533, 532, 77, 30);
-		panelModificarParte.add(txtImporteVehiculosMoPa2);
-		
-		comboxVehiculosMoPa3 = new JComboBox();
-		comboxVehiculosMoPa3.setBounds(435, 573, 175, 30);
-		panelModificarParte.add(comboxVehiculosMoPa3);
-		
-		txtCantidadVehiculosMoPa3 = new JTextField();
-		txtCantidadVehiculosMoPa3.setColumns(10);
-		txtCantidadVehiculosMoPa3.setBounds(435, 614, 77, 30);
-		panelModificarParte.add(txtCantidadVehiculosMoPa3);
-		
-		txtImporteVehiculosMoPa3 = new JTextField();
-		txtImporteVehiculosMoPa3.setColumns(10);
-		txtImporteVehiculosMoPa3.setBounds(533, 614, 77, 30);
-		panelModificarParte.add(txtImporteVehiculosMoPa3);
-		
-		comboxMaterialesMoPa1 = new JComboBox();
-		comboxMaterialesMoPa1.setBounds(650, 409, 175, 30);
-		panelModificarParte.add(comboxMaterialesMoPa1);
-		
-		txtCantidadMaterialesMoPa1 = new JTextField();
-		txtCantidadMaterialesMoPa1.setColumns(10);
-		txtCantidadMaterialesMoPa1.setBounds(650, 450, 77, 30);
-		panelModificarParte.add(txtCantidadMaterialesMoPa1);
-		
-		txtImporteMaterialesMoPa1 = new JTextField();
-		txtImporteMaterialesMoPa1.setColumns(10);
-		txtImporteMaterialesMoPa1.setBounds(748, 450, 77, 30);
-		panelModificarParte.add(txtImporteMaterialesMoPa1);
-		
-		comboxMaterialesMoPa2 = new JComboBox();
-		comboxMaterialesMoPa2.setBounds(650, 491, 175, 30);
-		panelModificarParte.add(comboxMaterialesMoPa2);
-		
-		txtCantidadMaterialesMoPa2 = new JTextField();
-		txtCantidadMaterialesMoPa2.setColumns(10);
-		txtCantidadMaterialesMoPa2.setBounds(650, 532, 77, 30);
-		panelModificarParte.add(txtCantidadMaterialesMoPa2);
-		
-		txtImporteMaterialesMoPa2 = new JTextField();
-		txtImporteMaterialesMoPa2.setColumns(10);
-		txtImporteMaterialesMoPa2.setBounds(748, 532, 77, 30);
-		panelModificarParte.add(txtImporteMaterialesMoPa2);
-		
-		comboxMaterialesMoPa3 = new JComboBox();
-		comboxMaterialesMoPa3.setBounds(650, 573, 175, 30);
-		panelModificarParte.add(comboxMaterialesMoPa3);
-		
-		txtCantidadMaterialesMoPa3 = new JTextField();
-		txtCantidadMaterialesMoPa3.setColumns(10);
-		txtCantidadMaterialesMoPa3.setBounds(650, 614, 77, 30);
-		panelModificarParte.add(txtCantidadMaterialesMoPa3);
-		
-		txtImporteMaterialesMoPa3 = new JTextField();
-		txtImporteMaterialesMoPa3.setColumns(10);
-		txtImporteMaterialesMoPa3.setBounds(748, 614, 77, 30);
-		panelModificarParte.add(txtImporteMaterialesMoPa3);
-		
-		comboxTrabajosMoPa1 = new JComboBox();
-		comboxTrabajosMoPa1.setBounds(865, 409, 175, 30);
-		panelModificarParte.add(comboxTrabajosMoPa1);
-		
-		txtCantidadTrabajosMoPa1 = new JTextField();
-		txtCantidadTrabajosMoPa1.setColumns(10);
-		txtCantidadTrabajosMoPa1.setBounds(865, 450, 77, 30);
-		panelModificarParte.add(txtCantidadTrabajosMoPa1);
-		
-		txtImporteTrabajosMoPa1 = new JTextField();
-		txtImporteTrabajosMoPa1.setColumns(10);
-		txtImporteTrabajosMoPa1.setBounds(963, 450, 77, 30);
-		panelModificarParte.add(txtImporteTrabajosMoPa1);
-		
-		comboxTrabajosMoPa2 = new JComboBox();
-		comboxTrabajosMoPa2.setBounds(865, 491, 175, 30);
-		panelModificarParte.add(comboxTrabajosMoPa2);
-		
-		txtCantidadTrabajosMoPa2 = new JTextField();
-		txtCantidadTrabajosMoPa2.setColumns(10);
-		txtCantidadTrabajosMoPa2.setBounds(865, 532, 77, 30);
-		panelModificarParte.add(txtCantidadTrabajosMoPa2);
-		
-		txtImporteTrabajosMoPa2 = new JTextField();
-		txtImporteTrabajosMoPa2.setColumns(10);
-		txtImporteTrabajosMoPa2.setBounds(963, 532, 77, 30);
-		panelModificarParte.add(txtImporteTrabajosMoPa2);
-		
-		comboxTrabajosMoPa3 = new JComboBox();
-		comboxTrabajosMoPa3.setBounds(865, 573, 175, 30);
-		panelModificarParte.add(comboxTrabajosMoPa3);
-		
-		txtCantidadTrabajosMoPa3 = new JTextField();
-		txtCantidadTrabajosMoPa3.setColumns(10);
-		txtCantidadTrabajosMoPa3.setBounds(865, 614, 77, 30);
-		panelModificarParte.add(txtCantidadTrabajosMoPa3);
-		
-		txtImporteTrabajosMoPa3 = new JTextField();
-		txtImporteTrabajosMoPa3.setColumns(10);
-		txtImporteTrabajosMoPa3.setBounds(963, 614, 77, 30);
-		panelModificarParte.add(txtImporteTrabajosMoPa3);
-		
-		lblAmpliarMoPa1 = new JLabel("New label");
-		lblAmpliarMoPa1.addMouseListener(new LblAmpliarMoPa1MouseListener());
-		lblAmpliarMoPa1.setBounds(405, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa1);
-		
-		lblAmpliarMoPa2 = new JLabel("New label");
-		lblAmpliarMoPa2.addMouseListener(new LblAmpliarMoPa2MouseListener());
-		lblAmpliarMoPa2.setBounds(405, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa2);
-		
-		lblAmpliarMoPa3 = new JLabel("New label");
-		lblAmpliarMoPa3.addMouseListener(new LblAmpliarMoPa3MouseListener());
-		lblAmpliarMoPa3.setBounds(405, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa3);
-		
-		lblAmpliarMoPa4 = new JLabel("New label");
-		lblAmpliarMoPa4.addMouseListener(new LblAmpliarMoPa4MouseListener());
-		lblAmpliarMoPa4.setBounds(620, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa4);
-		
-		lblAmpliarMoPa5 = new JLabel("New label");
-		lblAmpliarMoPa5.addMouseListener(new LblAmpliarMoPa5MouseListener());
-		lblAmpliarMoPa5.setBounds(620, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa5);
-		
-		lblAmpliarMoPa6 = new JLabel("New label");
-		lblAmpliarMoPa6.addMouseListener(new LblAmpliarMoPa6MouseListener());
-		lblAmpliarMoPa6.setBounds(620, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa6);
-		
-		lblAmpliarMoPa7 = new JLabel("New label");
-		lblAmpliarMoPa7.addMouseListener(new LblAmpliarMoPa7MouseListener());
-		lblAmpliarMoPa7.setBounds(835, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa7);
-		
-		lblAmpliarMoPa8 = new JLabel("New label");
-		lblAmpliarMoPa8.addMouseListener(new LblAmpliarMoPa8MouseListener());
-		lblAmpliarMoPa8.setBounds(835, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa8);
-		
-		lblAmpliarMoPa9 = new JLabel("New label");
-		lblAmpliarMoPa9.addMouseListener(new LblAmpliarMoPa9MouseListener());
-		lblAmpliarMoPa9.setBounds(835, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa9);
-		
-		lblAmpliarMoPa10 = new JLabel("New label");
-		lblAmpliarMoPa10.addMouseListener(new LblAmpliarMoPa10MouseListener());
-		lblAmpliarMoPa10.setBounds(1050, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa10);
-		
-		lblAmpliarMoPa11 = new JLabel("New label");
-		lblAmpliarMoPa11.addMouseListener(new LblAmpliarMoPa11MouseListener());
-		lblAmpliarMoPa11.setBounds(1050, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa11);
-		
-		lblAmpliarMoPa12 = new JLabel("New label");
-		lblAmpliarMoPa12.addMouseListener(new LblAmpliarMoPa12MouseListener());
-		lblAmpliarMoPa12.setBounds(1050, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa12);
-		
-		lblModificarParteInt = new JLabel("Modificar Parte");
-		lblModificarParteInt.setHorizontalAlignment(SwingConstants.CENTER);
-		lblModificarParteInt.setForeground(Color.WHITE);
-		lblModificarParteInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
-		lblModificarParteInt.setBounds(525, 50, 230, 43);
-		panelModificarParte.add(lblModificarParteInt);
-		
-		lblPersonalMoPa = new JLabel("Personal:");
-		lblPersonalMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPersonalMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblPersonalMoPa.setBounds(200, 368, 215, 30);
-		panelModificarParte.add(lblPersonalMoPa);
-		
-		lblVehiculosMoPa = new JLabel("Vehiculos:");
-		lblVehiculosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblVehiculosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblVehiculosMoPa.setBounds(415, 368, 215, 30);
-		panelModificarParte.add(lblVehiculosMoPa);
-		
-		lblMaterialesMoPa = new JLabel("Materiales:");
-		lblMaterialesMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblMaterialesMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblMaterialesMoPa.setBounds(630, 368, 215, 30);
-		panelModificarParte.add(lblMaterialesMoPa);
-		
-		lblTrabajosMoPa = new JLabel("Trabajos:");
-		lblTrabajosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTrabajosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblTrabajosMoPa.setBounds(845, 368, 215, 30);
-		panelModificarParte.add(lblTrabajosMoPa);
-		
-		lblProyectoMoPa = new JLabel("Proyecto:");
-		lblProyectoMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblProyectoMoPa.setBounds(200, 180, 150, 30);
-		panelModificarParte.add(lblProyectoMoPa);
-		
-		comboxProyectoMoPa = new JComboBox();
-		comboxProyectoMoPa.setBounds(360, 180, 150, 30);
-		panelModificarParte.add(comboxProyectoMoPa);
-		
-		lblFechaMoPa = new JLabel("Fecha:");
-		lblFechaMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblFechaMoPa.setBounds(750, 180, 150, 30);
-		panelModificarParte.add(lblFechaMoPa);
-		
-		txtFechaMoPa = new JTextField();
-		txtFechaMoPa.setEditable(false);
-		txtFechaMoPa.setColumns(10);
-		txtFechaMoPa.setBounds(910, 180, 150, 30);
-		panelModificarParte.add(txtFechaMoPa);
-		
-		comboxPersonalMoPa1.setVisible(false);
-		txtCantidadPersonalMoPa1.setVisible(false);
-		txtImportePersonalMoPa1.setVisible(false);
-		comboxPersonalMoPa2.setVisible(false);
-		txtCantidadPersonalMoPa2.setVisible(false);
-		txtImportePersonalMoPa2.setVisible(false);
-		comboxPersonalMoPa3.setVisible(false);
-		txtCantidadPersonalMoPa3.setVisible(false);
-		txtImportePersonalMoPa3.setVisible(false);
-		comboxVehiculosMoPa1.setVisible(false);
-		txtCantidadVehiculosMoPa1.setVisible(false);
-		txtImporteVehiculosMoPa1.setVisible(false);
-		comboxVehiculosMoPa2.setVisible(false);
-		txtCantidadVehiculosMoPa2.setVisible(false);
-		txtImporteVehiculosMoPa2.setVisible(false);
-		comboxVehiculosMoPa3.setVisible(false);
-		txtCantidadVehiculosMoPa3.setVisible(false);
-		txtImporteVehiculosMoPa3.setVisible(false);
-		comboxMaterialesMoPa1.setVisible(false);
-		txtCantidadMaterialesMoPa1.setVisible(false);
-		txtImporteMaterialesMoPa1.setVisible(false);
-		comboxMaterialesMoPa2.setVisible(false);
-		txtCantidadMaterialesMoPa2.setVisible(false);
-		txtImporteMaterialesMoPa2.setVisible(false);
-		comboxMaterialesMoPa3.setVisible(false);
-		txtCantidadMaterialesMoPa3.setVisible(false);
-		txtImporteMaterialesMoPa3.setVisible(false);
-		comboxTrabajosMoPa1.setVisible(false);
-		txtCantidadTrabajosMoPa1.setVisible(false);
-		txtImporteTrabajosMoPa1.setVisible(false);
-		comboxTrabajosMoPa2.setVisible(false);
-		txtCantidadTrabajosMoPa2.setVisible(false);
-		txtImporteTrabajosMoPa2.setVisible(false);
-		comboxTrabajosMoPa3.setVisible(false);
-		txtCantidadTrabajosMoPa3.setVisible(false);
-		txtImporteTrabajosMoPa3.setVisible(false);
-		
-		lblAmpliarMoPa2.setVisible(false);
-		lblAmpliarMoPa3.setVisible(false);
-		lblAmpliarMoPa5.setVisible(false);
-		lblAmpliarMoPa6.setVisible(false);
-		lblAmpliarMoPa8.setVisible(false);
-		lblAmpliarMoPa9.setVisible(false);
-		lblAmpliarMoPa11.setVisible(false);
-		lblAmpliarMoPa12.setVisible(false);
-		lblAnadirUsuario.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAnadirUsuario.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblAnadirUsuario.setBounds(380, 0, 170, 43);
-		contentPane.add(lblAnadirUsuario);
-		
-		lblAnadirParte = new JLabel("Añadir Parte");
-		lblAnadirParte.addMouseListener(new LblAnadirParteMouseListener());
-		lblAnadirParte.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAnadirParte.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblAnadirParte.setBounds(550, 0, 170, 43);
-		contentPane.add(lblAnadirParte);
-		
-		lblAnadirProyecto = new JLabel("Añadir Proyecto");
-		lblAnadirProyecto.addMouseListener(new LblAnadirProyectoMouseListener());
-		lblAnadirProyecto.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAnadirProyecto.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblAnadirProyecto.setBounds(210, 0, 170, 43);
-		contentPane.add(lblAnadirProyecto);
-		
-		lblListadoProyectos = new JLabel("Listado Proyectos");
-		lblListadoProyectos.addMouseListener(new LblListadoProyectosMouseListener());
-		lblListadoProyectos.setHorizontalAlignment(SwingConstants.CENTER);
-		lblListadoProyectos.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblListadoProyectos.setBounds(40, 0, 170, 43);
-		contentPane.add(lblListadoProyectos);
-		
-		lblModificarParte = new JLabel("Modificar Parte");
-		lblModificarParte.addMouseListener(new LblModificarParteMouseListener());
-		lblModificarParte.setHorizontalAlignment(SwingConstants.CENTER);
-		lblModificarParte.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		lblModificarParte.setBounds(720, 0, 170, 43);
-		contentPane.add(lblModificarParte);
-		
-		home = new JLabel("");
-		home.addMouseListener(new HomeMouseListener());
-		home.setBounds(10, 11, 20, 20);
-		contentPane.add(home);
-		min.setBounds(1150, 11, 20, 20);
-		contentPane.add(min);
-		
-		exit = new JLabel("New label");
-		exit.addMouseListener(new ExitMouseListener());
-		exit.setBounds(1250, 11, 20, 20);
-		contentPane.add(exit);
-		
-		contr = new JLabel("New label");
-		contr.addMouseListener(new ContrMouseListener());
-		contr.setBounds(1200, 11, 20, 20);
-		contentPane.add(contr);
-		
-		movebar = new JLabel("");
-		movebar.addMouseMotionListener(new MovebarMouseMotionListener());
-		movebar.addMouseListener(new MovebarMouseListener());
-		movebar.setBounds(0, 0, 1280, 43);
-		contentPane.add(movebar);
-		
-		panelAnadirProyecto = new JPanel();
-		panelAnadirProyecto.setBounds(0, 54, 1280, 666);
-		panelAnadirProyecto.setOpaque(false);
-		contentPane.add(panelAnadirProyecto);
-		panelAnadirProyecto.setLayout(null);
-		
-		lblAnadirProyectoInt = new JLabel("Añadir Proyecto");
-		lblAnadirProyectoInt.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAnadirProyectoInt.setForeground(Color.WHITE);
-		lblAnadirProyectoInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
-		lblAnadirProyectoInt.setBounds(540, 50, 200, 43);
-		panelAnadirProyecto.add(lblAnadirProyectoInt);
-		
-		lblNombreProyectoAnPr = new JLabel("Nombre Proyecto:");
-		lblNombreProyectoAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblNombreProyectoAnPr.setBounds(200, 180, 150, 30);
-		panelAnadirProyecto.add(lblNombreProyectoAnPr);
-		
-		lblClienteAnPr = new JLabel("Cliente:");
-		lblClienteAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblClienteAnPr.setBounds(200, 221, 150, 30);
-		panelAnadirProyecto.add(lblClienteAnPr);
-		
-		lblJefeProyectoAnPr = new JLabel("Jefe Proyecto:");
-		lblJefeProyectoAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblJefeProyectoAnPr.setBounds(200, 262, 150, 30);
-		panelAnadirProyecto.add(lblJefeProyectoAnPr);
-		
-		lblFechaInicioAnPr = new JLabel("Fecha Inicio:");
-		lblFechaInicioAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblFechaInicioAnPr.setBounds(750, 180, 150, 30);
-		panelAnadirProyecto.add(lblFechaInicioAnPr);
-		
-		lblMaterialTransportarAnPr = new JLabel("Material a Transportar:");
-		lblMaterialTransportarAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblMaterialTransportarAnPr.setBounds(750, 262, 150, 30);
-		panelAnadirProyecto.add(lblMaterialTransportarAnPr);
-		
-		dateChooserFechaInicioAnPr = new JDateChooser();
-		dateChooserFechaInicioAnPr.setBounds(910, 180, 150, 30);
-		panelAnadirProyecto.add(dateChooserFechaInicioAnPr);
-		
-		lblFechaFinAnPr = new JLabel("Fecha Fin");
-		lblFechaFinAnPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblFechaFinAnPr.setBounds(750, 221, 150, 30);
-		panelAnadirProyecto.add(lblFechaFinAnPr);
-		
-		dateChooserFechaFinAnPr = new JDateChooser();
-		dateChooserFechaFinAnPr.setBounds(910, 221, 150, 30);
-		panelAnadirProyecto.add(dateChooserFechaFinAnPr);
-		
-		comboxMaterialTransportarAnPr = new JComboBox();
-		comboxMaterialTransportarAnPr.setBounds(910, 264, 150, 30);
-		panelAnadirProyecto.add(comboxMaterialTransportarAnPr);
-		
-		comboxJefeAnPr = new JComboBox();
-		comboxJefeAnPr.setBounds(360, 262, 150, 30);
-		panelAnadirProyecto.add(comboxJefeAnPr);
-		
-		comboxClienteAnPr = new JComboBox();
-		comboxClienteAnPr.setBounds(360, 221, 150, 30);
-		panelAnadirProyecto.add(comboxClienteAnPr);
-		
-		textFieldNombreAnPr = new JTextField();
-		textFieldNombreAnPr.setBounds(360, 180, 150, 30);
-		panelAnadirProyecto.add(textFieldNombreAnPr);
-		textFieldNombreAnPr.setColumns(10);
-		
-		lblPersonalAnPr = new JLabel("Personal:");
-		lblPersonalAnPr.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPersonalAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblPersonalAnPr.setBounds(200, 368, 215, 30);
-		panelAnadirProyecto.add(lblPersonalAnPr);
-		
-		lblVehiculosAnPr = new JLabel("Vehiculos:");
-		lblVehiculosAnPr.setHorizontalAlignment(SwingConstants.CENTER);
-		lblVehiculosAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblVehiculosAnPr.setBounds(415, 368, 215, 30);
-		panelAnadirProyecto.add(lblVehiculosAnPr);
-		
-		lblMaterialesAnPr = new JLabel("Materiales:");
-		lblMaterialesAnPr.setHorizontalAlignment(SwingConstants.CENTER);
-		lblMaterialesAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblMaterialesAnPr.setBounds(630, 368, 215, 30);
-		panelAnadirProyecto.add(lblMaterialesAnPr);
-		
-		lblTrabajosAnPr = new JLabel("Trabajos:");
-		lblTrabajosAnPr.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTrabajosAnPr.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblTrabajosAnPr.setBounds(845, 368, 215, 30);
-		panelAnadirProyecto.add(lblTrabajosAnPr);
-		
-		comboxPersonalAnPr1 = new JComboBox();
-		comboxPersonalAnPr1.setBounds(220, 409, 175, 30);
-		panelAnadirProyecto.add(comboxPersonalAnPr1);
-		
-		txtCantidadPersonalAnPr1 = new JTextField();
-		txtCantidadPersonalAnPr1.setBounds(220, 450, 77, 30);
-		panelAnadirProyecto.add(txtCantidadPersonalAnPr1);
-		txtCantidadPersonalAnPr1.setColumns(10);
-		
-		txtImportePersonalAnPr1 = new JTextField();
-		txtImportePersonalAnPr1.setColumns(10);
-		txtImportePersonalAnPr1.setBounds(318, 450, 77, 30);
-		panelAnadirProyecto.add(txtImportePersonalAnPr1);
-		
-		comboxPersonalAnPr2 = new JComboBox();
-		comboxPersonalAnPr2.setBounds(220, 491, 175, 30);
-		panelAnadirProyecto.add(comboxPersonalAnPr2);
-		
-		txtCantidadPersonalAnPr2 = new JTextField();
-		txtCantidadPersonalAnPr2.setColumns(10);
-		txtCantidadPersonalAnPr2.setBounds(220, 532, 77, 30);
-		panelAnadirProyecto.add(txtCantidadPersonalAnPr2);
-		
-		txtImportePersonalAnPr2 = new JTextField();
-		txtImportePersonalAnPr2.setColumns(10);
-		txtImportePersonalAnPr2.setBounds(318, 532, 77, 30);
-		panelAnadirProyecto.add(txtImportePersonalAnPr2);
-		
-		comboxPersonalAnPr3 = new JComboBox();
-		comboxPersonalAnPr3.setBounds(220, 573, 175, 30);
-		panelAnadirProyecto.add(comboxPersonalAnPr3);
-		
-		txtCantidadPersonalAnPr3 = new JTextField();
-		txtCantidadPersonalAnPr3.setColumns(10);
-		txtCantidadPersonalAnPr3.setBounds(220, 614, 77, 30);
-		panelAnadirProyecto.add(txtCantidadPersonalAnPr3);
-		
-		txtImportePersonalAnPr3 = new JTextField();
-		txtImportePersonalAnPr3.setColumns(10);
-		txtImportePersonalAnPr3.setBounds(318, 614, 77, 30);
-		panelAnadirProyecto.add(txtImportePersonalAnPr3);
-		
-		comboxVehiculosAnPr1 = new JComboBox();
-		comboxVehiculosAnPr1.setBounds(435, 409, 175, 30);
-		panelAnadirProyecto.add(comboxVehiculosAnPr1);
-		
-		txtCantidadVehiculosAnPr1 = new JTextField();
-		txtCantidadVehiculosAnPr1.setColumns(10);
-		txtCantidadVehiculosAnPr1.setBounds(435, 450, 77, 30);
-		panelAnadirProyecto.add(txtCantidadVehiculosAnPr1);
-		
-		txtImporteVehiculosAnPr1 = new JTextField();
-		txtImporteVehiculosAnPr1.setColumns(10);
-		txtImporteVehiculosAnPr1.setBounds(533, 450, 77, 30);
-		panelAnadirProyecto.add(txtImporteVehiculosAnPr1);
-		
-		comboxVehiculosAnPr2 = new JComboBox();
-		comboxVehiculosAnPr2.setBounds(435, 491, 175, 30);
-		panelAnadirProyecto.add(comboxVehiculosAnPr2);
-		
-		txtCantidadVehiculosAnPr2 = new JTextField();
-		txtCantidadVehiculosAnPr2.setColumns(10);
-		txtCantidadVehiculosAnPr2.setBounds(435, 532, 77, 30);
-		panelAnadirProyecto.add(txtCantidadVehiculosAnPr2);
-		
-		txtImporteVehiculosAnPr2 = new JTextField();
-		txtImporteVehiculosAnPr2.setColumns(10);
-		txtImporteVehiculosAnPr2.setBounds(533, 532, 77, 30);
-		panelAnadirProyecto.add(txtImporteVehiculosAnPr2);
-		
-		comboxVehiculosAnPr3 = new JComboBox();
-		comboxVehiculosAnPr3.setBounds(435, 573, 175, 30);
-		panelAnadirProyecto.add(comboxVehiculosAnPr3);
-		
-		txtCantidadVehiculosAnPr3 = new JTextField();
-		txtCantidadVehiculosAnPr3.setColumns(10);
-		txtCantidadVehiculosAnPr3.setBounds(435, 614, 77, 30);
-		panelAnadirProyecto.add(txtCantidadVehiculosAnPr3);
-		
-		txtImporteVehiculosAnPr3 = new JTextField();
-		txtImporteVehiculosAnPr3.setColumns(10);
-		txtImporteVehiculosAnPr3.setBounds(533, 614, 77, 30);
-		panelAnadirProyecto.add(txtImporteVehiculosAnPr3);
-		
-		comboxMaterialesAnPr1 = new JComboBox();
-		comboxMaterialesAnPr1.setBounds(650, 409, 175, 30);
-		panelAnadirProyecto.add(comboxMaterialesAnPr1);
-		
-		txtCantidadMaterialesAnPr1 = new JTextField();
-		txtCantidadMaterialesAnPr1.setColumns(10);
-		txtCantidadMaterialesAnPr1.setBounds(650, 450, 77, 30);
-		panelAnadirProyecto.add(txtCantidadMaterialesAnPr1);
-		
-		txtImporteMaterialesAnPr1 = new JTextField();
-		txtImporteMaterialesAnPr1.setColumns(10);
-		txtImporteMaterialesAnPr1.setBounds(748, 450, 77, 30);
-		panelAnadirProyecto.add(txtImporteMaterialesAnPr1);
-		
-		comboxMaterialesAnPr2 = new JComboBox();
-		comboxMaterialesAnPr2.setBounds(650, 491, 175, 30);
-		panelAnadirProyecto.add(comboxMaterialesAnPr2);
-		
-		txtCantidadMaterialesAnPr2 = new JTextField();
-		txtCantidadMaterialesAnPr2.setColumns(10);
-		txtCantidadMaterialesAnPr2.setBounds(650, 532, 77, 30);
-		panelAnadirProyecto.add(txtCantidadMaterialesAnPr2);
-		
-		txtImporteMaterialesAnPr2 = new JTextField();
-		txtImporteMaterialesAnPr2.setColumns(10);
-		txtImporteMaterialesAnPr2.setBounds(748, 532, 77, 30);
-		panelAnadirProyecto.add(txtImporteMaterialesAnPr2);
-		
-		comboxMaterialesAnPr3 = new JComboBox();
-		comboxMaterialesAnPr3.setBounds(650, 573, 175, 30);
-		panelAnadirProyecto.add(comboxMaterialesAnPr3);
-		
-		txtCantidadMaterialesAnPr3 = new JTextField();
-		txtCantidadMaterialesAnPr3.setColumns(10);
-		txtCantidadMaterialesAnPr3.setBounds(650, 614, 77, 30);
-		panelAnadirProyecto.add(txtCantidadMaterialesAnPr3);
-		
-		txtImporteMaterialesAnPr3 = new JTextField();
-		txtImporteMaterialesAnPr3.setColumns(10);
-		txtImporteMaterialesAnPr3.setBounds(748, 614, 77, 30);
-		panelAnadirProyecto.add(txtImporteMaterialesAnPr3);
-		
-		comboxTrabajosAnPr1 = new JComboBox();
-		comboxTrabajosAnPr1.setBounds(865, 409, 175, 30);
-		panelAnadirProyecto.add(comboxTrabajosAnPr1);
-		
-		txtCantidadTrabajosAnPr1 = new JTextField();
-		txtCantidadTrabajosAnPr1.setColumns(10);
-		txtCantidadTrabajosAnPr1.setBounds(865, 450, 77, 30);
-		panelAnadirProyecto.add(txtCantidadTrabajosAnPr1);
-		
-		txtImporteTrabajosAnPr1 = new JTextField();
-		txtImporteTrabajosAnPr1.setColumns(10);
-		txtImporteTrabajosAnPr1.setBounds(963, 450, 77, 30);
-		panelAnadirProyecto.add(txtImporteTrabajosAnPr1);
-		
-		comboxTrabajosAnPr2 = new JComboBox();
-		comboxTrabajosAnPr2.setBounds(865, 491, 175, 30);
-		panelAnadirProyecto.add(comboxTrabajosAnPr2);
-		
-		txtCantidadTrabajosAnPr2 = new JTextField();
-		txtCantidadTrabajosAnPr2.setColumns(10);
-		txtCantidadTrabajosAnPr2.setBounds(865, 532, 77, 30);
-		panelAnadirProyecto.add(txtCantidadTrabajosAnPr2);
-		
-		txtImporteTrabajosAnPr2 = new JTextField();
-		txtImporteTrabajosAnPr2.setColumns(10);
-		txtImporteTrabajosAnPr2.setBounds(963, 532, 77, 30);
-		panelAnadirProyecto.add(txtImporteTrabajosAnPr2);
-		
-		comboxTrabajosAnPr3 = new JComboBox();
-		comboxTrabajosAnPr3.setBounds(865, 573, 175, 30);
-		panelAnadirProyecto.add(comboxTrabajosAnPr3);
-		
-		txtCantidadTrabajosAnPr3 = new JTextField();
-		txtCantidadTrabajosAnPr3.setColumns(10);
-		txtCantidadTrabajosAnPr3.setBounds(865, 614, 77, 30);
-		panelAnadirProyecto.add(txtCantidadTrabajosAnPr3);
-		
-		txtImporteTrabajosAnPr3 = new JTextField();
-		txtImporteTrabajosAnPr3.setColumns(10);
-		txtImporteTrabajosAnPr3.setBounds(963, 614, 77, 30);
-		panelAnadirProyecto.add(txtImporteTrabajosAnPr3);
-		
-		//
-		comboxPersonalAnPr1.setVisible(false);
-		txtCantidadPersonalAnPr1.setVisible(false);
-		txtImportePersonalAnPr1.setVisible(false);
-		comboxPersonalAnPr2.setVisible(false);
-		txtCantidadPersonalAnPr2.setVisible(false);
-		txtImportePersonalAnPr2.setVisible(false);
-		comboxPersonalAnPr3.setVisible(false);
-		txtCantidadPersonalAnPr3.setVisible(false);
-		txtImportePersonalAnPr3.setVisible(false);
-		comboxVehiculosAnPr1.setVisible(false);
-		txtCantidadVehiculosAnPr1.setVisible(false);
-		txtImporteVehiculosAnPr1.setVisible(false);
-		comboxVehiculosAnPr2.setVisible(false);
-		txtCantidadVehiculosAnPr2.setVisible(false);
-		txtImporteVehiculosAnPr2.setVisible(false);
-		comboxVehiculosAnPr3.setVisible(false);
-		txtCantidadVehiculosAnPr3.setVisible(false);
-		txtImporteVehiculosAnPr3.setVisible(false);
-		comboxMaterialesAnPr1.setVisible(false);
-		txtCantidadMaterialesAnPr1.setVisible(false);
-		txtImporteMaterialesAnPr1.setVisible(false);
-		comboxMaterialesAnPr2.setVisible(false);
-		txtCantidadMaterialesAnPr2.setVisible(false);
-		txtImporteMaterialesAnPr2.setVisible(false);
-		comboxMaterialesAnPr3.setVisible(false);
-		txtCantidadMaterialesAnPr3.setVisible(false);
-		txtImporteMaterialesAnPr3.setVisible(false);
-		comboxTrabajosAnPr1.setVisible(false);
-		txtCantidadTrabajosAnPr1.setVisible(false);
-		txtImporteTrabajosAnPr1.setVisible(false);
-		comboxTrabajosAnPr2.setVisible(false);
-		txtCantidadTrabajosAnPr2.setVisible(false);
-		txtImporteTrabajosAnPr2.setVisible(false);
-		comboxTrabajosAnPr3.setVisible(false);
-		txtCantidadTrabajosAnPr3.setVisible(false);
-		txtImporteTrabajosAnPr3.setVisible(false);
-		//
-		lblAmpliarAnPr1 = new JLabel("New label");
-		lblAmpliarAnPr1.addMouseListener(new LblAmpliarAnPr1MouseListener());
-		lblAmpliarAnPr1.setBounds(405, 409, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr1);
-		
-		lblAmpliarAnPr2 = new JLabel("New label");
-		lblAmpliarAnPr2.addMouseListener(new LblAmpliarAnPr2MouseListener());
-		lblAmpliarAnPr2.setBounds(405, 491, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr2);
-		
-		lblAmpliarAnPr3 = new JLabel("New label");
-		lblAmpliarAnPr3.addMouseListener(new LblAmpliarAnPr3MouseListener());
-		lblAmpliarAnPr3.setBounds(405, 573, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr3);
-		
-		lblAmpliarAnPr4 = new JLabel("New label");
-		lblAmpliarAnPr4.addMouseListener(new LblAmpliarAnPr4MouseListener());
-		lblAmpliarAnPr4.setBounds(620, 409, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr4);
-		
-		lblAmpliarAnPr5 = new JLabel("New label");
-		lblAmpliarAnPr5.addMouseListener(new LblAmpliarAnPr5MouseListener());
-		lblAmpliarAnPr5.setBounds(620, 491, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr5);
-		
-		lblAmpliarAnPr6 = new JLabel("New label");
-		lblAmpliarAnPr6.addMouseListener(new LblAmpliarAnPr6MouseListener());
-		lblAmpliarAnPr6.setBounds(620, 573, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr6);
-		
-		lblAmpliarAnPr7 = new JLabel("New label");
-		lblAmpliarAnPr7.addMouseListener(new LblAmpliarAnPr7MouseListener());
-		lblAmpliarAnPr7.setBounds(835, 409, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr7);
-		
-		lblAmpliarAnPr8 = new JLabel("New label");
-		lblAmpliarAnPr8.addMouseListener(new LblAmpliarAnPr8MouseListener());
-		lblAmpliarAnPr8.setBounds(835, 491, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr8);
-		
-		lblAmpliarAnPr9 = new JLabel("New label");
-		lblAmpliarAnPr9.addMouseListener(new LblAmpliarAnPr9MouseListener());
-		lblAmpliarAnPr9.setBounds(835, 573, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr9);
-		
-		lblAmpliarAnPr10 = new JLabel("New label");
-		lblAmpliarAnPr10.addMouseListener(new LblAmpliarAnPr10MouseListener());
-		lblAmpliarAnPr10.setBounds(1050, 409, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr10);
-		
-		lblAmpliarAnPr11 = new JLabel("New label");
-		lblAmpliarAnPr11.addMouseListener(new LblAmpliarAnPr11MouseListener());
-		lblAmpliarAnPr11.setBounds(1050, 491, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr11);
-		
-		lblAmpliarAnPr12 = new JLabel("New label");
-		lblAmpliarAnPr12.addMouseListener(new LblAmpliarAnPr12MouseListener());
-		lblAmpliarAnPr12.setBounds(1050, 573, 20, 20);
-		panelAnadirProyecto.add(lblAmpliarAnPr12);
-		
-		
-		lblAmpliarAnPr1.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr2.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr3.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr4.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr5.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr6.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr7.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr8.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr9.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr10.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr11.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		lblAmpliarAnPr12.setIcon(new ImageIcon(".\\rsrc\\+.png"));
-		
-		panelAnadirUsuario = new JPanel();
-		panelAnadirUsuario.setBounds(0, 54, 1280, 666);
-		panelAnadirUsuario.setOpaque(false);
-		contentPane.add(panelAnadirUsuario);
-		panelAnadirUsuario.setLayout(null);
-		
-		lblUsuario = new JLabel("Usuario");
-		lblUsuario.setForeground(Color.WHITE);
-		lblUsuario.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblUsuario.setBounds(540, 199, 80, 20);
-		panelAnadirUsuario.add(lblUsuario);
-		
-		textField = new JTextField();
-		textField.setForeground(Color.BLACK);
-		textField.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		textField.setColumns(10);
-		textField.setBounds(540, 230, 200, 30);
-		panelAnadirUsuario.add(textField);
-		
-		lblContr = new JLabel("Contraseña");
-		lblContr.setForeground(Color.WHITE);
-		lblContr.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblContr.setBounds(540, 290, 120, 20);
-		panelAnadirUsuario.add(lblContr);
-		
-		passwordField = new JPasswordField();
-		passwordField.setForeground(Color.BLACK);
-		passwordField.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		passwordField.setEchoChar('●');
-		passwordField.setBounds(540, 321, 200, 30);
-		panelAnadirUsuario.add(passwordField);
-		
-		btnAnadir = new JButton("Añadir");
-		btnAnadir.setBounds(540, 450, 200, 30);
-		panelAnadirUsuario.add(btnAnadir);
-		
-		lblAnadirUsuarioInt = new JLabel("Añadir Usuario");
-		lblAnadirUsuarioInt.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAnadirUsuarioInt.setForeground(Color.WHITE);
-		lblAnadirUsuarioInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
-		lblAnadirUsuarioInt.setBounds(540, 50, 200, 43);
-		panelAnadirUsuario.add(lblAnadirUsuarioInt);
-		
-		chckEmpleado = new JCheckBox("Empleado");
-		chckEmpleado.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		chckEmpleado.setBounds(540, 385, 200, 30);
-		panelAnadirUsuario.add(chckEmpleado);
-		chckEmpleado.setOpaque(false);
+		txtFechaAnPa.setText(diaHoyString);
+		txtFechaAnPa.setText(diaHoyString);
+		
+		btnEnviarAnPr_1 = new JButton("Enviar");
+		btnEnviarAnPr_1.setBounds(576, 120, 150, 30);
+		panelAnadirParte.add(btnEnviarAnPr_1);
 		
 		panelListaProyectos = new JPanel();
 		panelListaProyectos.setBounds(0, 54, 1280, 666);
@@ -1561,10 +1573,6 @@ public class Encargado extends JFrame {
 		txtMaterialLsPr.setColumns(10);
 		txtMaterialLsPr.setBounds(910, 262, 150, 30);
 		panelListaProyectos.add(txtMaterialLsPr);
-		
-		dateChooserFechaFinLsPr = new JDateChooser();
-		dateChooserFechaFinLsPr.setBounds(910, 221, 150, 30);
-		panelListaProyectos.add(dateChooserFechaFinLsPr);
 		
 		txtCantidadPersonalLsPr1 = new JTextField();
 		txtCantidadPersonalLsPr1.setEditable(false);
@@ -1843,6 +1851,124 @@ public class Encargado extends JFrame {
 		txtNombreTrabajosLsPr3.setVisible(false);
 		txtCantidadTrabajosLsPr3.setVisible(false);
 		txtImporteTrabajosLsPr3.setVisible(false);
+		txtFechaIniLsPr.setText(diaHoyString);
+		
+		lblProyectoLsPr = new JLabel("Proyecto:");
+		lblProyectoLsPr.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblProyectoLsPr.setBounds(500, 119, 150, 30);
+		panelListaProyectos.add(lblProyectoLsPr);
+		
+		comboxProyectoLsPr = new JComboBox();
+		comboxProyectoLsPr.addActionListener(new ComboxProyectoLsPrActionListener());
+		comboxProyectoLsPr.setBounds(660, 119, 150, 30);
+		panelListaProyectos.add(comboxProyectoLsPr);
+		
+		txtFechaFinLsPr = new JTextField();
+		txtFechaFinLsPr.setText((String) null);
+		txtFechaFinLsPr.setEditable(false);
+		txtFechaFinLsPr.setColumns(10);
+		txtFechaFinLsPr.setBounds(910, 221, 150, 30);
+		panelListaProyectos.add(txtFechaFinLsPr);
+		
+		
+		panelAnadirUsuario = new JPanel();
+		panelAnadirUsuario.setBounds(0, 54, 1280, 666);
+		panelAnadirUsuario.setOpaque(false);
+		contentPane.add(panelAnadirUsuario);
+		panelAnadirUsuario.setLayout(null);
+		
+		lblUsuario = new JLabel("Usuario");
+		lblUsuario.setForeground(Color.WHITE);
+		lblUsuario.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblUsuario.setBounds(540, 199, 80, 20);
+		panelAnadirUsuario.add(lblUsuario);
+		
+		textField = new JTextField();
+		textField.setForeground(Color.BLACK);
+		textField.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		textField.setColumns(10);
+		textField.setBounds(540, 230, 200, 30);
+		panelAnadirUsuario.add(textField);
+		
+		lblContr = new JLabel("Contraseña");
+		lblContr.setForeground(Color.WHITE);
+		lblContr.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblContr.setBounds(540, 290, 120, 20);
+		panelAnadirUsuario.add(lblContr);
+		
+		passwordField = new JPasswordField();
+		passwordField.setForeground(Color.BLACK);
+		passwordField.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		passwordField.setEchoChar('●');
+		passwordField.setBounds(540, 321, 200, 30);
+		panelAnadirUsuario.add(passwordField);
+		
+		btnAnadir = new JButton("Añadir");
+		btnAnadir.addMouseListener(new BtnAnadirMouseListener());
+		btnAnadir.setBounds(540, 450, 200, 30);
+		panelAnadirUsuario.add(btnAnadir);
+		
+		lblAnadirUsuarioInt = new JLabel("Añadir Usuario");
+		lblAnadirUsuarioInt.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAnadirUsuarioInt.setForeground(Color.WHITE);
+		lblAnadirUsuarioInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
+		lblAnadirUsuarioInt.setBounds(540, 50, 200, 43);
+		panelAnadirUsuario.add(lblAnadirUsuarioInt);
+		lblAnadirUsuario.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAnadirUsuario.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblAnadirUsuario.setBounds(380, 0, 170, 43);
+		contentPane.add(lblAnadirUsuario);
+		
+		lblAnadirParte = new JLabel("Añadir Parte");
+		lblAnadirParte.addMouseListener(new LblAnadirParteMouseListener());
+		lblAnadirParte.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAnadirParte.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblAnadirParte.setBounds(550, 0, 170, 43);
+		contentPane.add(lblAnadirParte);
+		
+		lblAnadirProyecto = new JLabel("Añadir Proyecto");
+		lblAnadirProyecto.addMouseListener(new LblAnadirProyectoMouseListener());
+		lblAnadirProyecto.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAnadirProyecto.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblAnadirProyecto.setBounds(210, 0, 170, 43);
+		contentPane.add(lblAnadirProyecto);
+		
+		lblListadoProyectos = new JLabel("Listado Proyectos");
+		lblListadoProyectos.addMouseListener(new LblListadoProyectosMouseListener());
+		lblListadoProyectos.setHorizontalAlignment(SwingConstants.CENTER);
+		lblListadoProyectos.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblListadoProyectos.setBounds(40, 0, 170, 43);
+		contentPane.add(lblListadoProyectos);
+		
+		lblModificarParte = new JLabel("Modificar Parte");
+		lblModificarParte.addMouseListener(new LblModificarParteMouseListener());
+		lblModificarParte.setHorizontalAlignment(SwingConstants.CENTER);
+		lblModificarParte.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblModificarParte.setBounds(720, 0, 170, 43);
+		contentPane.add(lblModificarParte);
+		
+		home = new JLabel("");
+		home.addMouseListener(new HomeMouseListener());
+		home.setBounds(10, 11, 20, 20);
+		contentPane.add(home);
+		min.setBounds(1150, 11, 20, 20);
+		contentPane.add(min);
+		
+		exit = new JLabel("New label");
+		exit.addMouseListener(new ExitMouseListener());
+		exit.setBounds(1250, 11, 20, 20);
+		contentPane.add(exit);
+		
+		contr = new JLabel("New label");
+		contr.addMouseListener(new ContrMouseListener());
+		contr.setBounds(1200, 11, 20, 20);
+		contentPane.add(contr);
+		
+		movebar = new JLabel("");
+		movebar.addMouseMotionListener(new MovebarMouseMotionListener());
+		movebar.addMouseListener(new MovebarMouseListener());
+		movebar.setBounds(0, 0, 1280, 43);
+		contentPane.add(movebar);
 		
 		fondo = new JLabel("");
 		fondo.setBounds(0, 0, 1280, 720);
@@ -1857,24 +1983,17 @@ public class Encargado extends JFrame {
 		}
 		fondo.setFocusable(true);
 		fondo.requestFocus();
-		
-		lblAmpliarAnPr2.setVisible(false);
-		lblAmpliarAnPr3.setVisible(false);
-		lblAmpliarAnPr5.setVisible(false);
-		lblAmpliarAnPr6.setVisible(false);
-		lblAmpliarAnPr8.setVisible(false);
-		lblAmpliarAnPr9.setVisible(false);
-		lblAmpliarAnPr11.setVisible(false);
-		lblAmpliarAnPr12.setVisible(false);
 		limpiarPanels();
 		
-		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		diaHoyString = sdf.format(diaHoy);
 	}
 	
 	private void establecerContrasteOcs() {
 		fondo.setIcon(new ImageIcon(".\\rsrc\\night.jpg"));
 		min.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
 		exit.setIcon(new ImageIcon(".\\rsrc\\x_w.png"));
+		exitAnPr.setIcon(new ImageIcon(".\\rsrc\\x_w.png"));
 		contr.setIcon(new ImageIcon(".\\rsrc\\ccircle_w.png"));
 		movebar.setIcon(new ImageIcon(".\\rsrc\\underline_w.png"));
 		home.setIcon(new ImageIcon(".\\rsrc\\home_w.png"));
@@ -1882,7 +2001,6 @@ public class Encargado extends JFrame {
 		lblModificarParte.setForeground(Color.WHITE);
 		lblAnadirParte.setForeground(Color.WHITE);
 		lblAnadirUsuario.setForeground(Color.WHITE);
-		chckEmpleado.setForeground(Color.WHITE);
 		lblAnadirProyecto.setForeground(Color.WHITE);
 		lblListadoProyectos.setForeground(Color.WHITE);
 		lblAnadirUsuarioInt.setForeground(Color.WHITE);
@@ -1911,6 +2029,7 @@ public class Encargado extends JFrame {
 		lblVehiculosLsPr.setForeground(Color.WHITE);
 		lblMaterialesLsPr.setForeground(Color.WHITE);
 		lblTrabajosLsPr.setForeground(Color.WHITE);
+		lblProyectoLsPr.setForeground(Color.WHITE);
 
 		lblProyectoAnPa.setForeground(Color.WHITE);
 		lblFechaAnPa.setForeground(Color.WHITE);
@@ -2083,6 +2202,7 @@ public class Encargado extends JFrame {
 		fondo.setIcon(new ImageIcon(".\\rsrc\\day.jpg"));
 		min.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
 		exit.setIcon(new ImageIcon(".\\rsrc\\x.png"));
+		exitAnPr.setIcon(new ImageIcon(".\\rsrc\\x.png"));
 		contr.setIcon(new ImageIcon(".\\rsrc\\ccircle.png"));
 		movebar.setIcon(new ImageIcon(".\\rsrc\\underline.png"));
 		home.setIcon(new ImageIcon(".\\rsrc\\home.png"));
@@ -2090,7 +2210,6 @@ public class Encargado extends JFrame {
 		lblModificarParte.setForeground(Color.BLACK);
 		lblAnadirParte.setForeground(Color.BLACK);
 		lblAnadirUsuario.setForeground(Color.BLACK);
-		chckEmpleado.setForeground(Color.BLACK);
 		lblAnadirProyecto.setForeground(Color.BLACK);
 		lblListadoProyectos.setForeground(Color.BLACK);
 		lblAnadirUsuarioInt.setForeground(Color.BLACK);
@@ -2119,6 +2238,7 @@ public class Encargado extends JFrame {
 		lblVehiculosLsPr.setForeground(Color.BLACK);
 		lblMaterialesLsPr.setForeground(Color.BLACK);
 		lblTrabajosLsPr.setForeground(Color.BLACK);
+		lblProyectoLsPr.setForeground(Color.BLACK);
 		
 		lblProyectoAnPa.setForeground(Color.BLACK);
 		lblFechaAnPa.setForeground(Color.BLACK);
@@ -3221,6 +3341,70 @@ public class Encargado extends JFrame {
 			}
 		}
 	}
+	private class BtnAnadirMouseListener extends MouseAdapter {
+		@Override
+		// Usuario = Admin, Contraseña = Admin1234=
+		public void mouseClicked(MouseEvent e) {
+			String pattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,}$";
+			String passwd = String.valueOf(passwordField.getPassword());
+			System.out.println(passwd);
+			if (passwd.matches(pattern)) {
+				try  {
+					db.registrarL(textField.getText(), passwordField.getPassword());
+					JOptionPane.showMessageDialog(null, "Usuario añadido correctamente");
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(null, "Error, este usuario ya existe");
+				}
+			} else {
+				JOptionPane.showMessageDialog(null, "La contraseña tiene que ser de mínimo 8 dígitos, una mayúscula, una minúscula, un número y un carácter especial");
+			}
+		}
+	}
+	private class DateChooserFechaInicioAnPrPropertyChangeListener implements PropertyChangeListener {
+		public void propertyChange(PropertyChangeEvent evt) {
+			dateChooserFechaFinAnPr.setMinSelectableDate(dateChooserFechaInicioAnPr.getDate());
+		}
+	}
+	private class ComboxProyectoLsPrActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			actualizarDatosLsPr();
+		}
+	}
+	private class BtnEnviarAnPrMouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			SimpleDateFormat sdfEnviar = new SimpleDateFormat("yyyy-MM-dd");
+			if (!textFieldNombreAnPr.getText().equals("")) {
+				Cliente cl = (Cliente) comboxClienteAnPr.getSelectedItem();
+				Material_Peligroso ma = (Material_Peligroso) comboxMaterialTransportarAnPr.getSelectedItem();
+				Empleado en = (Empleado) comboxJefeAnPr.getSelectedItem();
+				Proyecto pr = null;
+				if (comboxMaterialTransportarAnPr.isEnabled()) {
+					pr = new Proyecto(textFieldNombreAnPr.getText(), sdfEnviar.format(dateChooserFechaInicioAnPr.getDate()), sdfEnviar.format(dateChooserFechaFinAnPr.getDate()), ma.getCod_material(), en.getCod_encargado(), cl.getCod_cliente());
+				} else {
+					pr = new Proyecto(textFieldNombreAnPr.getText(), sdfEnviar.format(dateChooserFechaInicioAnPr.getDate()), sdfEnviar.format(dateChooserFechaFinAnPr.getDate()), 0, en.getCod_encargado(), cl.getCod_cliente());
+				}
+				db.insertarProyecto(pr);
+				JOptionPane.showMessageDialog(null, "Datos insertados con éxito");
+				actualizarProyectos();
+			} else {
+				JOptionPane.showMessageDialog(null, "Error, inserte los datos necesarios");
+			}
+		}
+	}
+	private class ExitAnPrMouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if (deshabilitarBoton) {
+				comboxMaterialTransportarAnPr.setEnabled(true);
+				deshabilitarBoton = false;
+			} else {
+				comboxMaterialTransportarAnPr.setEnabled(false);
+				deshabilitarBoton = true;
+			}
+			
+		}
+	}
 	
 	// Añadir Proyecto
 	
@@ -3228,6 +3412,8 @@ public class Encargado extends JFrame {
 		comboxPersonalAnPr2.setVisible(false);
 		txtCantidadPersonalAnPr2.setVisible(false);
 		txtImportePersonalAnPr2.setVisible(false);
+		txtCantidadPersonalAnPr2.setText("");
+		txtImportePersonalAnPr2.setText("");
 		if (!estado) {
 			lblAmpliarAnPr2.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3240,6 +3426,8 @@ public class Encargado extends JFrame {
 		comboxPersonalAnPr3.setVisible(false);
 		txtCantidadPersonalAnPr3.setVisible(false);
 		txtImportePersonalAnPr3.setVisible(false);
+		txtCantidadPersonalAnPr3.setText("");
+		txtImportePersonalAnPr3.setText("");
 		if (!estado) {
 			lblAmpliarAnPr3.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3252,6 +3440,8 @@ public class Encargado extends JFrame {
 		comboxVehiculosAnPr2.setVisible(false);
 		txtCantidadVehiculosAnPr2.setVisible(false);
 		txtImporteVehiculosAnPr2.setVisible(false);
+		txtCantidadVehiculosAnPr2.setText("");
+		txtImporteVehiculosAnPr2.setText("");
 		if (!estado) {
 			lblAmpliarAnPr5.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3264,6 +3454,8 @@ public class Encargado extends JFrame {
 		comboxVehiculosAnPr3.setVisible(false);
 		txtCantidadVehiculosAnPr3.setVisible(false);
 		txtImporteVehiculosAnPr3.setVisible(false);
+		txtCantidadVehiculosAnPr3.setText("");
+		txtImporteVehiculosAnPr3.setText("");
 		if (!estado) {
 			lblAmpliarAnPr6.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3276,6 +3468,8 @@ public class Encargado extends JFrame {
 		comboxMaterialesAnPr2.setVisible(false);
 		txtCantidadMaterialesAnPr2.setVisible(false);
 		txtImporteMaterialesAnPr2.setVisible(false);
+		txtCantidadMaterialesAnPr2.setText("");
+		txtImporteMaterialesAnPr2.setText("");
 		if (!estado) {
 			lblAmpliarAnPr8.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3288,6 +3482,8 @@ public class Encargado extends JFrame {
 		comboxMaterialesAnPr3.setVisible(false);
 		txtCantidadMaterialesAnPr3.setVisible(false);
 		txtImporteMaterialesAnPr3.setVisible(false);
+		txtCantidadMaterialesAnPr3.setText("");
+		txtImporteMaterialesAnPr3.setText("");
 		if (!estado) {
 			lblAmpliarAnPr9.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3300,6 +3496,8 @@ public class Encargado extends JFrame {
 		comboxTrabajosAnPr2.setVisible(false);
 		txtCantidadTrabajosAnPr2.setVisible(false);
 		txtImporteTrabajosAnPr2.setVisible(false);
+		txtCantidadTrabajosAnPr2.setText("");
+		txtImporteTrabajosAnPr2.setText("");
 		if (!estado) {
 			lblAmpliarAnPr11.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3312,6 +3510,8 @@ public class Encargado extends JFrame {
 		comboxTrabajosAnPr3.setVisible(false);
 		txtCantidadTrabajosAnPr3.setVisible(false);
 		txtImporteTrabajosAnPr3.setVisible(false);
+		txtCantidadTrabajosAnPr3.setText("");
+		txtImporteTrabajosAnPr3.setText("");
 		if (!estado) {
 			lblAmpliarAnPr12.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3324,6 +3524,8 @@ public class Encargado extends JFrame {
 		comboxPersonalAnPa2.setVisible(false);
 		txtCantidadPersonalAnPa2.setVisible(false);
 		txtImportePersonalAnPa2.setVisible(false);
+		txtCantidadPersonalAnPa2.setText("");
+		txtImportePersonalAnPa2.setText("");
 		if (!estado) {
 			lblAmpliarAnPa2.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3336,6 +3538,8 @@ public class Encargado extends JFrame {
 		comboxPersonalAnPa3.setVisible(false);
 		txtCantidadPersonalAnPa3.setVisible(false);
 		txtImportePersonalAnPa3.setVisible(false);
+		txtCantidadPersonalAnPa3.setText("");
+		txtImportePersonalAnPa3.setText("");
 		if (!estado) {
 			lblAmpliarAnPa3.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3348,6 +3552,8 @@ public class Encargado extends JFrame {
 		comboxVehiculosAnPa2.setVisible(false);
 		txtCantidadVehiculosAnPa2.setVisible(false);
 		txtImporteVehiculosAnPa2.setVisible(false);
+		txtCantidadVehiculosAnPa2.setText("");
+		txtImporteVehiculosAnPa2.setText("");
 		if (!estado) {
 			lblAmpliarAnPa5.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3360,6 +3566,8 @@ public class Encargado extends JFrame {
 		comboxVehiculosAnPa3.setVisible(false);
 		txtCantidadVehiculosAnPa3.setVisible(false);
 		txtImporteVehiculosAnPa3.setVisible(false);
+		txtCantidadVehiculosAnPa3.setText("");
+		txtImporteVehiculosAnPa3.setText("");
 		if (!estado) {
 			lblAmpliarAnPa6.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3372,6 +3580,8 @@ public class Encargado extends JFrame {
 		comboxMaterialesAnPa2.setVisible(false);
 		txtCantidadMaterialesAnPa2.setVisible(false);
 		txtImporteMaterialesAnPa2.setVisible(false);
+		txtCantidadMaterialesAnPa2.setText("");
+		txtImporteMaterialesAnPa2.setText("");
 		if (!estado) {
 			lblAmpliarAnPa8.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3384,6 +3594,8 @@ public class Encargado extends JFrame {
 		comboxMaterialesAnPa3.setVisible(false);
 		txtCantidadMaterialesAnPa3.setVisible(false);
 		txtImporteMaterialesAnPa3.setVisible(false);
+		txtCantidadMaterialesAnPa3.setText("");
+		txtImporteMaterialesAnPa3.setText("");
 		if (!estado) {
 			lblAmpliarAnPa9.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3396,6 +3608,8 @@ public class Encargado extends JFrame {
 		comboxTrabajosAnPa2.setVisible(false);
 		txtCantidadTrabajosAnPa2.setVisible(false);
 		txtImporteTrabajosAnPa2.setVisible(false);
+		txtCantidadTrabajosAnPa2.setText("");
+		txtImporteTrabajosAnPa2.setText("");
 		if (!estado) {
 			lblAmpliarAnPa11.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3408,6 +3622,8 @@ public class Encargado extends JFrame {
 		comboxTrabajosAnPa3.setVisible(false);
 		txtCantidadTrabajosAnPa3.setVisible(false);
 		txtImporteTrabajosAnPa3.setVisible(false);
+		txtCantidadTrabajosAnPa3.setText("");
+		txtImporteTrabajosAnPa3.setText("");
 		if (!estado) {
 			lblAmpliarAnPa12.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3420,6 +3636,8 @@ public class Encargado extends JFrame {
 		comboxPersonalMoPa2.setVisible(false);
 		txtCantidadPersonalMoPa2.setVisible(false);
 		txtImportePersonalMoPa2.setVisible(false);
+		txtCantidadPersonalMoPa2.setText("");
+		txtImportePersonalMoPa2.setText("");
 		if (!estado) {
 			lblAmpliarMoPa2.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3432,6 +3650,8 @@ public class Encargado extends JFrame {
 		comboxPersonalMoPa3.setVisible(false);
 		txtCantidadPersonalMoPa3.setVisible(false);
 		txtImportePersonalMoPa3.setVisible(false);
+		txtCantidadPersonalMoPa3.setText("");
+		txtImportePersonalMoPa3.setText("");
 		if (!estado) {
 			lblAmpliarMoPa3.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3444,6 +3664,8 @@ public class Encargado extends JFrame {
 		comboxVehiculosMoPa2.setVisible(false);
 		txtCantidadVehiculosMoPa2.setVisible(false);
 		txtImporteVehiculosMoPa2.setVisible(false);
+		txtCantidadVehiculosMoPa2.setText("");
+		txtImporteVehiculosMoPa2.setText("");
 		if (!estado) {
 			lblAmpliarMoPa5.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3456,6 +3678,8 @@ public class Encargado extends JFrame {
 		comboxVehiculosMoPa3.setVisible(false);
 		txtCantidadVehiculosMoPa3.setVisible(false);
 		txtImporteVehiculosMoPa3.setVisible(false);
+		txtCantidadVehiculosMoPa3.setText("");
+		txtImporteVehiculosMoPa3.setText("");
 		if (!estado) {
 			lblAmpliarMoPa6.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3468,6 +3692,8 @@ public class Encargado extends JFrame {
 		comboxMaterialesMoPa2.setVisible(false);
 		txtCantidadMaterialesMoPa2.setVisible(false);
 		txtImporteMaterialesMoPa2.setVisible(false);
+		txtCantidadMaterialesMoPa2.setText("");
+		txtImporteMaterialesMoPa2.setText("");
 		if (!estado) {
 			lblAmpliarMoPa8.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3480,6 +3706,8 @@ public class Encargado extends JFrame {
 		comboxMaterialesMoPa3.setVisible(false);
 		txtCantidadMaterialesMoPa3.setVisible(false);
 		txtImporteMaterialesMoPa3.setVisible(false);
+		txtCantidadMaterialesMoPa3.setText("");
+		txtImporteMaterialesMoPa3.setText("");
 		if (!estado) {
 			lblAmpliarMoPa9.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3492,6 +3720,8 @@ public class Encargado extends JFrame {
 		comboxTrabajosMoPa2.setVisible(false);
 		txtCantidadTrabajosMoPa2.setVisible(false);
 		txtImporteTrabajosMoPa2.setVisible(false);
+		txtCantidadTrabajosMoPa2.setText("");
+		txtImporteTrabajosMoPa2.setText("");
 		if (!estado) {
 			lblAmpliarMoPa11.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
@@ -3504,6 +3734,8 @@ public class Encargado extends JFrame {
 		comboxTrabajosMoPa3.setVisible(false);
 		txtCantidadTrabajosMoPa3.setVisible(false);
 		txtImporteTrabajosMoPa3.setVisible(false);
+		txtCantidadTrabajosMoPa3.setText("");
+		txtImporteTrabajosMoPa3.setText("");
 		if (!estado) {
 			lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
 		} else {
