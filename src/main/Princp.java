@@ -20,7 +20,7 @@ import javax.swing.JMenuItem;
 import javax.swing.UIManager;
 import javax.swing.border.SoftBevelBorder;
 
-import statics.Usersettings;
+import inoutput.Usersettings;
 
 import java.awt.Font;
 import javax.swing.SwingConstants;
