@@ -24,6 +24,11 @@ public class Proyecto {
 		this.cod_cliente = cod_cliente;
 	}
 	
+	public Proyecto(int cod_proyecto, String nombre_proyecto) {
+		this.cod_proyecto = cod_proyecto;
+		this.nombre_proyecto = nombre_proyecto;
+	}
+	
 	public Proyecto(int cod_proyecto, String nombre_proyecto, String fecha_inicio, String fecha_fin,String nombre_cliente,String nombre_encargado, int cod_material,
 			int cod_encargado, int cod_cliente) {
 		this.cod_proyecto = cod_proyecto;

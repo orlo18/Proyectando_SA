@@ -39,8 +39,12 @@ import java.util.regex.Matcher;
 
 import statics.Cliente;
 import statics.Empleado;
+import statics.Material;
 import statics.Material_Peligroso;
 import statics.Proyecto;
+import statics.Trabajo;
+import statics.Vehiculo;
+
 import java.util.regex.Pattern;
 
 import javax.swing.JTextField;
@@ -57,6 +61,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JTable;
 import javax.swing.JScrollBar;
 import java.beans.PropertyChangeListener;
+import java.sql.SQLException;
 import java.beans.PropertyChangeEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -332,16 +337,30 @@ public class Main extends JFrame {
 	private JComboBox comboxProyectoLsPr;
 	private JTextField txtFechaFinLsPr;
 	private ArrayList<Proyecto> vProyectos;
+	private ArrayList<Proyecto> vProyectosConParte;
 	private ArrayList<Cliente> vClientes;
 	private ArrayList<Material_Peligroso> vMateriales;
 	private ArrayList<Empleado> vEncargados;
 	private ComboBoxModel modeloProyectos;
+	private ComboBoxModel modeloProyectosConParte;
 	private ComboBoxModel modeloClientes;
 	private ComboBoxModel modeloMateriales;
 	private ComboBoxModel modeloEncargados;
+	private ComboBoxModel modeloPersonal1;
+	private ComboBoxModel modeloPersonal2;
+	private ComboBoxModel modeloPersonal3;
+	private ComboBoxModel modeloTrabajos1;
+	private ComboBoxModel modeloTrabajos2;
+	private ComboBoxModel modeloTrabajos3;
+	private ComboBoxModel modeloArticulos1;
+	private ComboBoxModel modeloArticulos2;
+	private ComboBoxModel modeloArticulos3;
+	private ComboBoxModel modeloVehiculos1;
+	private ComboBoxModel modeloVehiculos2;
+	private ComboBoxModel modeloVehiculos3;
 	private JButton btnEnviarAnPr;
 	private JButton btnEnviarAnPr_1;
-	private JButton btnEnviarAnPr_2;
+	private JButton btnEnviarMoPa;
 	private JLabel exitAnPr;
 	private boolean deshabilitarBoton = false;
 	
@@ -371,31 +390,376 @@ public class Main extends JFrame {
 	
 	
 	private void actualizarProyectos() {
+		vProyectosConParte = db.devolverProyectosConParte();
 		vProyectos = db.devolverProyectos();
 		vClientes = db.devolverClientes();
 		vMateriales = db.devolverMaterial();
 		vEncargados = db.devolverEncargado();
+		ArrayList<Trabajo> vTrabajos = db.devolverTrabajos();
+		ArrayList<Material> vArticulos = db.devolverMateriales();
+		ArrayList<Empleado> vPersonal = db.devolverEmpleados();
+		ArrayList<Vehiculo> vVehiculos = db.devolverVehiculos();
 		modeloProyectos = new DefaultComboBoxModel(vProyectos.toArray());
 		modeloClientes = new DefaultComboBoxModel(vClientes.toArray());
 		modeloMateriales = new DefaultComboBoxModel(vMateriales.toArray());
 		modeloEncargados = new DefaultComboBoxModel(vEncargados.toArray());
+		modeloProyectosConParte = new DefaultComboBoxModel(vProyectosConParte.toArray());
+		modeloArticulos1 = new DefaultComboBoxModel(vArticulos.toArray());
+		modeloArticulos2 = new DefaultComboBoxModel(vArticulos.toArray());
+		modeloArticulos3 = new DefaultComboBoxModel(vArticulos.toArray());
+		modeloVehiculos1 = new DefaultComboBoxModel(vVehiculos.toArray());
+		modeloVehiculos2 = new DefaultComboBoxModel(vVehiculos.toArray());
+		modeloVehiculos3 = new DefaultComboBoxModel(vVehiculos.toArray());
+		modeloTrabajos1 = new DefaultComboBoxModel(vTrabajos.toArray());
+		modeloTrabajos2 = new DefaultComboBoxModel(vTrabajos.toArray());
+		modeloTrabajos3 = new DefaultComboBoxModel(vTrabajos.toArray());
+		modeloPersonal1 = new DefaultComboBoxModel(vPersonal.toArray());
+		modeloPersonal2 = new DefaultComboBoxModel(vPersonal.toArray());
+		modeloPersonal3 = new DefaultComboBoxModel(vPersonal.toArray());
+		
 		comboxClienteAnPr.setModel(modeloClientes);
 		comboxMaterialTransportarAnPr.setModel(modeloMateriales);
 		comboxJefeAnPr.setModel(modeloEncargados);
 		comboxProyectoLsPr.setModel(modeloProyectos);
 		comboxProyectoAnPa.setModel(modeloProyectos);
-		comboxProyectoMoPa.setModel(modeloProyectos);
+		//
+		comboxProyectoMoPa.setModel(modeloProyectosConParte);
 		//Combox Personal
-		comboxPersonalAnPa1.setModel(modeloEncargados);;
-		comboxPersonalAnPa2.setModel(modeloEncargados);;
-		comboxPersonalAnPa3.setModel(modeloEncargados);;
-		comboxPersonalAnPr1.setModel(modeloEncargados);;
-		comboxPersonalAnPr2.setModel(modeloEncargados);;
-		comboxPersonalAnPr3.setModel(modeloEncargados);;
-		comboxMaterialesMoPa1.setModel(modeloEncargados);;
-		comboxMaterialesMoPa2.setModel(modeloEncargados);;
-		comboxMaterialesMoPa3.setModel(modeloEncargados);;
+		comboxPersonalAnPa1.setModel(modeloEncargados);
+		comboxPersonalAnPa2.setModel(modeloEncargados);
+		comboxPersonalAnPa3.setModel(modeloEncargados);
+		comboxPersonalAnPr1.setModel(modeloEncargados);
+		comboxPersonalAnPr2.setModel(modeloEncargados);
+		comboxPersonalAnPr3.setModel(modeloEncargados);
+		comboxMaterialesMoPa1.setModel(modeloEncargados);
+		comboxMaterialesMoPa2.setModel(modeloEncargados);
+		comboxMaterialesMoPa3.setModel(modeloEncargados);
+		
+		comboxPersonalAnPa1.setModel(modeloPersonal1);
+		comboxPersonalAnPa2.setModel(modeloPersonal2);
+		comboxPersonalAnPa3.setModel(modeloPersonal3);
+		comboxPersonalAnPr1.setModel(modeloPersonal1);
+		comboxPersonalAnPr2.setModel(modeloPersonal2);
+		comboxPersonalAnPr3.setModel(modeloPersonal3);
+		comboxPersonalMoPa1.setModel(modeloPersonal1);
+		comboxPersonalMoPa2.setModel(modeloPersonal2);
+		comboxPersonalMoPa3.setModel(modeloPersonal3);
+		
+		comboxMaterialesAnPa1.setModel(modeloArticulos1);
+		comboxMaterialesAnPa2.setModel(modeloArticulos2);
+		comboxMaterialesAnPa3.setModel(modeloArticulos3);
+		comboxMaterialesAnPr1.setModel(modeloArticulos1);
+		comboxMaterialesAnPr2.setModel(modeloArticulos2);
+		comboxMaterialesAnPr3.setModel(modeloArticulos3);
+		comboxMaterialesMoPa1.setModel(modeloArticulos1);
+		comboxMaterialesMoPa2.setModel(modeloArticulos2);
+		comboxMaterialesMoPa3.setModel(modeloArticulos3);
+		
+		comboxTrabajosAnPa1.setModel(modeloTrabajos1);
+		comboxTrabajosAnPa2.setModel(modeloTrabajos2);
+		comboxTrabajosAnPa3.setModel(modeloTrabajos3);
+		comboxTrabajosAnPr1.setModel(modeloTrabajos1);
+		comboxTrabajosAnPr2.setModel(modeloTrabajos2);
+		comboxTrabajosAnPr3.setModel(modeloTrabajos3);
+		comboxTrabajosMoPa1.setModel(modeloTrabajos1);
+		comboxTrabajosMoPa2.setModel(modeloTrabajos2);
+		comboxTrabajosMoPa3.setModel(modeloTrabajos3);
+		
+		comboxVehiculosAnPa1.setModel(modeloVehiculos1);
+		comboxVehiculosAnPa2.setModel(modeloVehiculos2);
+		comboxVehiculosAnPa3.setModel(modeloVehiculos3);
+		comboxVehiculosAnPr1.setModel(modeloVehiculos1);
+		comboxVehiculosAnPr2.setModel(modeloVehiculos2);
+		comboxVehiculosAnPr3.setModel(modeloVehiculos3);
+		comboxVehiculosMoPa1.setModel(modeloVehiculos1);
+		comboxVehiculosMoPa2.setModel(modeloVehiculos2);
+		comboxVehiculosMoPa3.setModel(modeloVehiculos3);
 		actualizarDatosLsPr();
+		actualizarDatosMoPa();
+	}
+	
+	private void actualizarDatosMoPa() {
+		lblAmpliarMoPa2.setVisible(false);
+		lblAmpliarMoPa3.setVisible(false);
+		lblAmpliarMoPa5.setVisible(false);
+		lblAmpliarMoPa6.setVisible(false);
+		lblAmpliarMoPa8.setVisible(false);
+		lblAmpliarMoPa9.setVisible(false);
+		lblAmpliarMoPa11.setVisible(false);
+		lblAmpliarMoPa12.setVisible(false);
+		Proyecto pr = (Proyecto) comboxProyectoMoPa.getSelectedItem();
+		amp1MoPa = true; amp2MoPa = true; amp3MoPa = true; amp4MoPa = true; amp5MoPa = true; amp6MoPa = true; amp7MoPa = true; amp8MoPa = true; amp9MoPa = true; amp10MoPa = true; amp11MoPa = true; amp12MoPa = true;
+		if (!estado) {
+			lblAmpliarMoPa1.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa2.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa3.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
+			lblAmpliarMoPa4.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa5.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa6.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
+			lblAmpliarMoPa7.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa8.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa9.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
+			lblAmpliarMoPa10.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa11.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\+_w.png"));
+		} else {
+			lblAmpliarMoPa1.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa2.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa3.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+			lblAmpliarMoPa4.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa5.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa6.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+			lblAmpliarMoPa7.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa8.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa9.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+			lblAmpliarMoPa10.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa11.setIcon(new ImageIcon(".\\rsrc\\+.png"));lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\+.png"));
+		}
+		comboxTrabajosMoPa1.setVisible(false);
+		txtCantidadTrabajosMoPa1.setVisible(false);
+		txtImporteTrabajosMoPa1.setVisible(false);
+		
+		comboxTrabajosMoPa2.setVisible(false);
+		txtCantidadTrabajosMoPa2.setVisible(false);
+		txtImporteTrabajosMoPa2.setVisible(false);
+		
+		comboxTrabajosMoPa3.setVisible(false);
+		txtCantidadTrabajosMoPa3.setVisible(false);
+		txtImporteTrabajosMoPa3.setVisible(false);
+		
+		ArrayList<Trabajo> vTrabajos= db.devolverEstimacionTrabajos(pr.getCod_proyecto());
+		
+		
+		for (int i=0;i<vTrabajos.size();i++) {
+			switch (i) {
+				case 0:
+					lblAmpliarMoPa2.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa1.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa1.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp1MoPa = false;
+					comboxTrabajosMoPa1.setVisible(true);
+					txtCantidadTrabajosMoPa1.setVisible(true);
+					txtImporteTrabajosMoPa1.setVisible(true);
+					comboxTrabajosMoPa1.setSelectedItem(vTrabajos.get(i));;
+					txtCantidadTrabajosMoPa1.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
+					txtImporteTrabajosMoPa1.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
+					break;
+				case 1:
+					lblAmpliarMoPa3.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa2.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa2.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp2MoPa = false;
+					comboxTrabajosMoPa2.setVisible(true);
+					txtCantidadTrabajosMoPa2.setVisible(true);
+					txtImporteTrabajosMoPa2.setVisible(true);
+					comboxTrabajosMoPa2.setSelectedItem(vTrabajos.get(i));
+					txtCantidadTrabajosMoPa2.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
+					txtImporteTrabajosMoPa2.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
+					break;
+				case 2:
+					if (!estado) {
+						lblAmpliarMoPa3.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa3.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp3MoPa = false;
+					comboxTrabajosMoPa3.setVisible(true);
+					txtCantidadTrabajosMoPa3.setVisible(true);
+					txtImporteTrabajosMoPa3.setVisible(true);
+					comboxTrabajosMoPa3.setSelectedItem(vTrabajos.get(i));
+					txtCantidadTrabajosMoPa3.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
+					txtImporteTrabajosMoPa3.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
+		
+		comboxMaterialesMoPa1.setVisible(false);
+		txtCantidadMaterialesMoPa1.setVisible(false);
+		txtImporteMaterialesMoPa1.setVisible(false);
+		
+		comboxMaterialesMoPa2.setVisible(false);
+		txtCantidadMaterialesMoPa2.setVisible(false);
+		txtImporteMaterialesMoPa2.setVisible(false);
+		
+		comboxMaterialesMoPa3.setVisible(false);
+		txtCantidadMaterialesMoPa3.setVisible(false);
+		txtImporteMaterialesMoPa3.setVisible(false);
+		
+		ArrayList<Material> vMateriales = db.devolverEstimacionMateriales(pr.getCod_proyecto());
+		
+		for (int i=0;i<vMateriales.size();i++) {
+			switch (i) {
+				case 0:
+					lblAmpliarMoPa5.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa4.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa4.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp4MoPa = false;
+					comboxMaterialesMoPa1.setVisible(true);
+					txtCantidadMaterialesMoPa1.setVisible(true);
+					txtImporteMaterialesMoPa1.setVisible(true);
+					comboxMaterialesMoPa1.setSelectedItem(vMateriales.get(i));
+					txtCantidadMaterialesMoPa1.setText(Integer.toString(vMateriales.get(i).getCantidad()));
+					txtImporteMaterialesMoPa1.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
+					break;
+				case 1:
+					lblAmpliarMoPa6.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa5.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa5.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp5MoPa = false;
+					comboxMaterialesMoPa2.setVisible(true);
+					txtCantidadMaterialesMoPa2.setVisible(true);
+					txtImporteMaterialesMoPa2.setVisible(true);
+					comboxMaterialesMoPa2.setSelectedItem(vMateriales.get(i));
+					txtCantidadMaterialesMoPa2.setText(Integer.toString(vMateriales.get(i).getCantidad()));
+					txtImporteMaterialesMoPa2.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
+					break;
+				case 2:
+					if (!estado) {
+						lblAmpliarMoPa6.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa6.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp6MoPa = false;
+					comboxMaterialesMoPa3.setVisible(true);
+					txtCantidadMaterialesMoPa3.setVisible(true);
+					txtImporteMaterialesMoPa3.setVisible(true);
+					comboxMaterialesMoPa3.setSelectedItem(vMateriales.get(i));
+					txtCantidadMaterialesMoPa3.setText(Integer.toString(vMateriales.get(i).getCantidad()));
+					txtImporteMaterialesMoPa3.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
+		
+		comboxPersonalMoPa1.setVisible(false);
+		txtCantidadPersonalMoPa1.setVisible(false);
+		txtImportePersonalMoPa1.setVisible(false);
+		
+		comboxPersonalMoPa2.setVisible(false);
+		txtCantidadPersonalMoPa2.setVisible(false);
+		txtImportePersonalMoPa2.setVisible(false);
+		
+		comboxPersonalMoPa3.setVisible(false);
+		txtCantidadPersonalMoPa3.setVisible(false);
+		txtImportePersonalMoPa3.setVisible(false);
+		
+		ArrayList<Empleado> vEmpleados = db.devolverEstimacionEmpleados(pr.getCod_proyecto());
+		
+		for (int i=0;i<vEmpleados.size();i++) {
+			switch (i) {
+				case 0:
+					lblAmpliarMoPa8.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa7.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa7.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp7MoPa = false;
+					comboxPersonalMoPa1.setVisible(true);
+					txtCantidadPersonalMoPa1.setVisible(true);
+					txtImportePersonalMoPa1.setVisible(true);
+					comboxPersonalMoPa1.setSelectedItem(vEmpleados.get(i));
+					txtCantidadPersonalMoPa1.setText(Integer.toString(vEmpleados.get(i).getCantidad()));
+					txtImportePersonalMoPa1.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
+					break;
+				case 1:
+					lblAmpliarMoPa9.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa8.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa8.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp8MoPa = false;
+					comboxPersonalMoPa2.setVisible(true);
+					txtCantidadPersonalMoPa2.setVisible(true);
+					txtImportePersonalMoPa2.setVisible(true);
+					comboxPersonalMoPa2.setSelectedItem(vEmpleados.get(i));
+					txtCantidadPersonalMoPa2.setText(Integer.toString(vEmpleados.get(i).getCantidad()));
+					txtImportePersonalMoPa2.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
+					break;
+				case 2:
+					if (!estado) {
+						lblAmpliarMoPa9.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa9.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp9MoPa = false;
+					comboxPersonalMoPa3.setVisible(true);
+					txtCantidadPersonalMoPa3.setVisible(true);
+					txtImportePersonalMoPa3.setVisible(true);
+					comboxPersonalMoPa3.setSelectedItem(vEmpleados.get(i));
+					txtCantidadPersonalMoPa3.setText(Integer.toString(vEmpleados.get(i).getCantidad()));
+					txtImportePersonalMoPa3.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
+		
+		comboxVehiculosMoPa1.setVisible(false);
+		txtCantidadVehiculosMoPa1.setVisible(false);
+		txtImporteVehiculosMoPa1.setVisible(false);
+		
+		comboxVehiculosMoPa2.setVisible(false);
+		txtCantidadVehiculosMoPa2.setVisible(false);
+		txtImporteVehiculosMoPa2.setVisible(false);
+		
+		comboxVehiculosMoPa3.setVisible(false);
+		txtCantidadVehiculosMoPa3.setVisible(false);
+		txtImporteVehiculosMoPa3.setVisible(false);
+		
+		ArrayList<Vehiculo> vVehiculos = db.devolverEstimacionVehiculos(pr.getCod_proyecto());
+		
+		for (int i=0;i<vVehiculos.size();i++) {
+			switch (i) {
+				case 0:
+					lblAmpliarMoPa11.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa10.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa10.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp10MoPa = false;
+					comboxVehiculosMoPa1.setVisible(true);
+					txtCantidadVehiculosMoPa1.setVisible(true);
+					txtImporteVehiculosMoPa1.setVisible(true);
+					comboxVehiculosMoPa1.setSelectedItem(vVehiculos.get(i));
+					txtCantidadVehiculosMoPa1.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
+					txtImporteVehiculosMoPa1.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
+					break;
+				case 1:
+					lblAmpliarMoPa12.setVisible(true);
+					if (!estado) {
+						lblAmpliarMoPa11.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa11.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp11MoPa = false;
+					comboxVehiculosMoPa2.setVisible(true);
+					txtCantidadVehiculosMoPa2.setVisible(true);
+					txtImporteVehiculosMoPa2.setVisible(true);
+					comboxVehiculosMoPa2.setSelectedItem(vVehiculos.get(i));
+					txtCantidadVehiculosMoPa2.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
+					txtImporteVehiculosMoPa2.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
+					break;
+				case 2:
+					if (!estado) {
+						lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
+					amp12MoPa = false;
+					comboxVehiculosMoPa3.setVisible(true);
+					txtCantidadVehiculosMoPa3.setVisible(true);
+					txtImporteVehiculosMoPa3.setVisible(true);
+					comboxVehiculosMoPa3.setSelectedItem(vVehiculos.get(i));
+					txtCantidadVehiculosMoPa3.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
+					txtImporteVehiculosMoPa3.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
 	}
 	
 	private void actualizarDatosLsPr() {
@@ -410,6 +774,190 @@ public class Main extends JFrame {
 		} else {
 			txtMaterialLsPr.setText(Integer.toString(pr.getCod_material()));
 		}
+		
+		txtNombreTrabajosLsPr1.setVisible(false);
+		txtCantidadTrabajosLsPr1.setVisible(false);
+		txtImporteTrabajosLsPr1.setVisible(false);
+		
+		txtNombreTrabajosLsPr2.setVisible(false);
+		txtCantidadTrabajosLsPr2.setVisible(false);
+		txtImporteTrabajosLsPr2.setVisible(false);
+		
+		txtNombreTrabajosLsPr3.setVisible(false);
+		txtCantidadTrabajosLsPr3.setVisible(false);
+		txtImporteTrabajosLsPr3.setVisible(false);
+		
+		ArrayList<Trabajo> vTrabajos= db.devolverEstimacionTrabajos(pr.getCod_proyecto());
+		
+		
+		for (int i=0;i<vTrabajos.size();i++) {
+			switch (i) {
+				case 0:
+					txtNombreTrabajosLsPr1.setVisible(true);
+					txtCantidadTrabajosLsPr1.setVisible(true);
+					txtImporteTrabajosLsPr1.setVisible(true);
+					txtNombreTrabajosLsPr1.setText(vTrabajos.get(i).getNombre_trabajo());
+					txtCantidadTrabajosLsPr1.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
+					txtImporteTrabajosLsPr1.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
+					break;
+				case 1:
+					txtNombreTrabajosLsPr2.setVisible(true);
+					txtCantidadTrabajosLsPr2.setVisible(true);
+					txtImporteTrabajosLsPr2.setVisible(true);
+					txtNombreTrabajosLsPr2.setText(vTrabajos.get(i).getNombre_trabajo());
+					txtCantidadTrabajosLsPr2.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
+					txtImporteTrabajosLsPr2.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
+					break;
+				case 2:
+					txtNombreTrabajosLsPr3.setVisible(true);
+					txtCantidadTrabajosLsPr3.setVisible(true);
+					txtImporteTrabajosLsPr3.setVisible(true);
+					txtNombreTrabajosLsPr3.setText(vTrabajos.get(i).getNombre_trabajo());
+					txtCantidadTrabajosLsPr3.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
+					txtImporteTrabajosLsPr3.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
+		
+		txtNombreMaterialesLsPr1.setVisible(false);
+		txtCantidadMaterialesLsPr1.setVisible(false);
+		txtImporteMaterialesLsPr1.setVisible(false);
+		
+		txtNombreMaterialesLsPr2.setVisible(false);
+		txtCantidadMaterialesLsPr2.setVisible(false);
+		txtImporteMaterialesLsPr2.setVisible(false);
+		
+		txtNombreMaterialesLsPr3.setVisible(false);
+		txtCantidadMaterialesLsPr3.setVisible(false);
+		txtImporteMaterialesLsPr3.setVisible(false);
+		
+		ArrayList<Material> vMateriales = db.devolverEstimacionMateriales(pr.getCod_proyecto());
+		
+		for (int i=0;i<vMateriales.size();i++) {
+			switch (i) {
+				case 0:
+					txtNombreMaterialesLsPr1.setVisible(true);
+					txtCantidadMaterialesLsPr1.setVisible(true);
+					txtImporteMaterialesLsPr1.setVisible(true);
+					txtNombreMaterialesLsPr1.setText(Integer.toString(vMateriales.get(i).getCod_material()));
+					txtCantidadMaterialesLsPr1.setText(Integer.toString(vMateriales.get(i).getCantidad()));
+					txtImporteMaterialesLsPr1.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
+					break;
+				case 1:
+					txtNombreMaterialesLsPr2.setVisible(true);
+					txtCantidadMaterialesLsPr2.setVisible(true);
+					txtImporteMaterialesLsPr2.setVisible(true);
+					txtNombreMaterialesLsPr2.setText(Integer.toString(vMateriales.get(i).getCod_material()));
+					txtCantidadMaterialesLsPr2.setText(Integer.toString(vMateriales.get(i).getCantidad()));
+					txtImporteMaterialesLsPr2.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
+					break;
+				case 2:
+					txtNombreMaterialesLsPr3.setVisible(true);
+					txtCantidadMaterialesLsPr3.setVisible(true);
+					txtImporteMaterialesLsPr3.setVisible(true);
+					txtNombreMaterialesLsPr3.setText(Integer.toString(vMateriales.get(i).getCod_material()));
+					txtCantidadMaterialesLsPr3.setText(Integer.toString(vMateriales.get(i).getCantidad()));
+					txtImporteMaterialesLsPr3.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
+		
+		txtNombrePersonalLsPr1.setVisible(false);
+		txtCantidadPersonalLsPr1.setVisible(false);
+		txtImportePersonalLsPr1.setVisible(false);
+		
+		txtNombrePersonalLsPr2.setVisible(false);
+		txtCantidadPersonalLsPr2.setVisible(false);
+		txtImportePersonalLsPr2.setVisible(false);
+		
+		txtNombrePersonalLsPr3.setVisible(false);
+		txtCantidadPersonalLsPr3.setVisible(false);
+		txtImportePersonalLsPr3.setVisible(false);
+		
+		ArrayList<Empleado> vEmpleados = db.devolverEstimacionEmpleados(pr.getCod_proyecto());
+		
+		for (int i=0;i<vEmpleados.size();i++) {
+			switch (i) {
+				case 0:
+					txtNombrePersonalLsPr1.setVisible(true);
+					txtCantidadPersonalLsPr1.setVisible(true);
+					txtImportePersonalLsPr1.setVisible(true);
+					txtNombrePersonalLsPr1.setText(vEmpleados.get(i).getNombre_encargado());
+					txtCantidadPersonalLsPr1.setText(Integer.toString(vEmpleados.get(i).getCantidad()));
+					txtImportePersonalLsPr1.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
+					break;
+				case 1:
+					txtNombrePersonalLsPr2.setVisible(true);
+					txtCantidadPersonalLsPr2.setVisible(true);
+					txtImportePersonalLsPr2.setVisible(true);
+					txtNombrePersonalLsPr2.setText(vEmpleados.get(i).getNombre_encargado());
+					txtCantidadPersonalLsPr2.setText(Integer.toString(vEmpleados.get(i).getCantidad()));
+					txtImportePersonalLsPr2.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
+					break;
+				case 2:
+					txtNombrePersonalLsPr3.setVisible(true);
+					txtCantidadPersonalLsPr3.setVisible(true);
+					txtImportePersonalLsPr3.setVisible(true);
+					txtNombrePersonalLsPr3.setText(vEmpleados.get(i).getNombre_encargado());
+					txtCantidadPersonalLsPr3.setText(Integer.toString(vEmpleados.get(i).getCantidad()));
+					txtImportePersonalLsPr3.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
+		
+		txtNombreVehiculosLsPr1.setVisible(false);
+		txtCantidadVehiculosLsPr1.setVisible(false);
+		txtImporteVehiculosLsPr1.setVisible(false);
+		
+		txtNombreVehiculosLsPr2.setVisible(false);
+		txtCantidadVehiculosLsPr2.setVisible(false);
+		txtImporteVehiculosLsPr2.setVisible(false);
+		
+		txtNombreVehiculosLsPr3.setVisible(false);
+		txtCantidadVehiculosLsPr3.setVisible(false);
+		txtImporteVehiculosLsPr3.setVisible(false);
+		
+		ArrayList<Vehiculo> vVehiculos = db.devolverEstimacionVehiculos(pr.getCod_proyecto());
+		
+		for (int i=0;i<vVehiculos.size();i++) {
+			switch (i) {
+				case 0:
+					txtNombreVehiculosLsPr1.setVisible(true);
+					txtCantidadVehiculosLsPr1.setVisible(true);
+					txtImporteVehiculosLsPr1.setVisible(true);
+					txtNombreVehiculosLsPr1.setText(vVehiculos.get(i).getMatricula());
+					txtCantidadVehiculosLsPr1.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
+					txtImporteVehiculosLsPr1.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
+					break;
+				case 1:
+					txtNombreVehiculosLsPr2.setVisible(true);
+					txtCantidadVehiculosLsPr2.setVisible(true);
+					txtImporteVehiculosLsPr2.setVisible(true);
+					txtNombreVehiculosLsPr2.setText(vVehiculos.get(i).getMatricula());
+					txtCantidadVehiculosLsPr2.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
+					txtImporteVehiculosLsPr2.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
+					break;
+				case 2:
+					txtNombreVehiculosLsPr3.setVisible(true);
+					txtCantidadVehiculosLsPr3.setVisible(true);
+					txtImporteVehiculosLsPr3.setVisible(true);
+					txtNombreVehiculosLsPr3.setText(vVehiculos.get(i).getMatricula());
+					txtCantidadVehiculosLsPr3.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
+					txtImporteVehiculosLsPr3.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
+					break;
+				default:
+					break;
+			}
+		}
+		//Arraylist<Empleado>
+		//Arraylist<Vehiculo>
+		//Arraylist<Material>
 	}
 	
 	private void initApp() {
@@ -427,6 +975,688 @@ public class Main extends JFrame {
 		
 		lblAnadirUsuario = new JLabel("Añadir Usuario");
 		lblAnadirUsuario.addMouseListener(new LblAnadirUsuarioMouseListener());
+		
+		panelModificarParte = new JPanel();
+		panelModificarParte.setBounds(0, 54, 1280, 666);
+		contentPane.add(panelModificarParte);
+		panelModificarParte.setLayout(null);
+		panelModificarParte.setOpaque(false);
+		
+		comboxPersonalMoPa1 = new JComboBox();
+		comboxPersonalMoPa1.setBounds(220, 409, 175, 30);
+		panelModificarParte.add(comboxPersonalMoPa1);
+		
+		txtCantidadPersonalMoPa1 = new JTextField();
+		txtCantidadPersonalMoPa1.setColumns(10);
+		txtCantidadPersonalMoPa1.setBounds(220, 450, 77, 30);
+		panelModificarParte.add(txtCantidadPersonalMoPa1);
+		
+		txtImportePersonalMoPa1 = new JTextField();
+		txtImportePersonalMoPa1.setColumns(10);
+		txtImportePersonalMoPa1.setBounds(318, 450, 77, 30);
+		panelModificarParte.add(txtImportePersonalMoPa1);
+		
+		comboxPersonalMoPa2 = new JComboBox();
+		comboxPersonalMoPa2.setBounds(220, 491, 175, 30);
+		panelModificarParte.add(comboxPersonalMoPa2);
+		
+		txtCantidadPersonalMoPa2 = new JTextField();
+		txtCantidadPersonalMoPa2.setColumns(10);
+		txtCantidadPersonalMoPa2.setBounds(220, 532, 77, 30);
+		panelModificarParte.add(txtCantidadPersonalMoPa2);
+		
+		txtImportePersonalMoPa2 = new JTextField();
+		txtImportePersonalMoPa2.setColumns(10);
+		txtImportePersonalMoPa2.setBounds(318, 532, 77, 30);
+		panelModificarParte.add(txtImportePersonalMoPa2);
+		
+		comboxPersonalMoPa3 = new JComboBox();
+		comboxPersonalMoPa3.setBounds(220, 573, 175, 30);
+		panelModificarParte.add(comboxPersonalMoPa3);
+		
+		txtCantidadPersonalMoPa3 = new JTextField();
+		txtCantidadPersonalMoPa3.setColumns(10);
+		txtCantidadPersonalMoPa3.setBounds(220, 614, 77, 30);
+		panelModificarParte.add(txtCantidadPersonalMoPa3);
+		
+		txtImportePersonalMoPa3 = new JTextField();
+		txtImportePersonalMoPa3.setColumns(10);
+		txtImportePersonalMoPa3.setBounds(318, 614, 77, 30);
+		panelModificarParte.add(txtImportePersonalMoPa3);
+		
+		comboxVehiculosMoPa1 = new JComboBox();
+		comboxVehiculosMoPa1.setBounds(435, 409, 175, 30);
+		panelModificarParte.add(comboxVehiculosMoPa1);
+		
+		txtCantidadVehiculosMoPa1 = new JTextField();
+		txtCantidadVehiculosMoPa1.setColumns(10);
+		txtCantidadVehiculosMoPa1.setBounds(435, 450, 77, 30);
+		panelModificarParte.add(txtCantidadVehiculosMoPa1);
+		
+		txtImporteVehiculosMoPa1 = new JTextField();
+		txtImporteVehiculosMoPa1.setColumns(10);
+		txtImporteVehiculosMoPa1.setBounds(533, 450, 77, 30);
+		panelModificarParte.add(txtImporteVehiculosMoPa1);
+		
+		comboxVehiculosMoPa2 = new JComboBox();
+		comboxVehiculosMoPa2.setBounds(435, 491, 175, 30);
+		panelModificarParte.add(comboxVehiculosMoPa2);
+		
+		txtCantidadVehiculosMoPa2 = new JTextField();
+		txtCantidadVehiculosMoPa2.setColumns(10);
+		txtCantidadVehiculosMoPa2.setBounds(435, 532, 77, 30);
+		panelModificarParte.add(txtCantidadVehiculosMoPa2);
+		
+		txtImporteVehiculosMoPa2 = new JTextField();
+		txtImporteVehiculosMoPa2.setColumns(10);
+		txtImporteVehiculosMoPa2.setBounds(533, 532, 77, 30);
+		panelModificarParte.add(txtImporteVehiculosMoPa2);
+		
+		comboxVehiculosMoPa3 = new JComboBox();
+		comboxVehiculosMoPa3.setBounds(435, 573, 175, 30);
+		panelModificarParte.add(comboxVehiculosMoPa3);
+		
+		txtCantidadVehiculosMoPa3 = new JTextField();
+		txtCantidadVehiculosMoPa3.setColumns(10);
+		txtCantidadVehiculosMoPa3.setBounds(435, 614, 77, 30);
+		panelModificarParte.add(txtCantidadVehiculosMoPa3);
+		
+		txtImporteVehiculosMoPa3 = new JTextField();
+		txtImporteVehiculosMoPa3.setColumns(10);
+		txtImporteVehiculosMoPa3.setBounds(533, 614, 77, 30);
+		panelModificarParte.add(txtImporteVehiculosMoPa3);
+		
+		comboxMaterialesMoPa1 = new JComboBox();
+		comboxMaterialesMoPa1.setBounds(650, 409, 175, 30);
+		panelModificarParte.add(comboxMaterialesMoPa1);
+		
+		txtCantidadMaterialesMoPa1 = new JTextField();
+		txtCantidadMaterialesMoPa1.setColumns(10);
+		txtCantidadMaterialesMoPa1.setBounds(650, 450, 77, 30);
+		panelModificarParte.add(txtCantidadMaterialesMoPa1);
+		
+		txtImporteMaterialesMoPa1 = new JTextField();
+		txtImporteMaterialesMoPa1.setColumns(10);
+		txtImporteMaterialesMoPa1.setBounds(748, 450, 77, 30);
+		panelModificarParte.add(txtImporteMaterialesMoPa1);
+		
+		comboxMaterialesMoPa2 = new JComboBox();
+		comboxMaterialesMoPa2.setBounds(650, 491, 175, 30);
+		panelModificarParte.add(comboxMaterialesMoPa2);
+		
+		txtCantidadMaterialesMoPa2 = new JTextField();
+		txtCantidadMaterialesMoPa2.setColumns(10);
+		txtCantidadMaterialesMoPa2.setBounds(650, 532, 77, 30);
+		panelModificarParte.add(txtCantidadMaterialesMoPa2);
+		
+		txtImporteMaterialesMoPa2 = new JTextField();
+		txtImporteMaterialesMoPa2.setColumns(10);
+		txtImporteMaterialesMoPa2.setBounds(748, 532, 77, 30);
+		panelModificarParte.add(txtImporteMaterialesMoPa2);
+		
+		comboxMaterialesMoPa3 = new JComboBox();
+		comboxMaterialesMoPa3.setBounds(650, 573, 175, 30);
+		panelModificarParte.add(comboxMaterialesMoPa3);
+		
+		txtCantidadMaterialesMoPa3 = new JTextField();
+		txtCantidadMaterialesMoPa3.setColumns(10);
+		txtCantidadMaterialesMoPa3.setBounds(650, 614, 77, 30);
+		panelModificarParte.add(txtCantidadMaterialesMoPa3);
+		
+		txtImporteMaterialesMoPa3 = new JTextField();
+		txtImporteMaterialesMoPa3.setColumns(10);
+		txtImporteMaterialesMoPa3.setBounds(748, 614, 77, 30);
+		panelModificarParte.add(txtImporteMaterialesMoPa3);
+		
+		comboxTrabajosMoPa1 = new JComboBox();
+		comboxTrabajosMoPa1.setBounds(865, 409, 175, 30);
+		panelModificarParte.add(comboxTrabajosMoPa1);
+		
+		txtCantidadTrabajosMoPa1 = new JTextField();
+		txtCantidadTrabajosMoPa1.setColumns(10);
+		txtCantidadTrabajosMoPa1.setBounds(865, 450, 77, 30);
+		panelModificarParte.add(txtCantidadTrabajosMoPa1);
+		
+		txtImporteTrabajosMoPa1 = new JTextField();
+		txtImporteTrabajosMoPa1.setColumns(10);
+		txtImporteTrabajosMoPa1.setBounds(963, 450, 77, 30);
+		panelModificarParte.add(txtImporteTrabajosMoPa1);
+		
+		comboxTrabajosMoPa2 = new JComboBox();
+		comboxTrabajosMoPa2.setBounds(865, 491, 175, 30);
+		panelModificarParte.add(comboxTrabajosMoPa2);
+		
+		txtCantidadTrabajosMoPa2 = new JTextField();
+		txtCantidadTrabajosMoPa2.setColumns(10);
+		txtCantidadTrabajosMoPa2.setBounds(865, 532, 77, 30);
+		panelModificarParte.add(txtCantidadTrabajosMoPa2);
+		
+		txtImporteTrabajosMoPa2 = new JTextField();
+		txtImporteTrabajosMoPa2.setColumns(10);
+		txtImporteTrabajosMoPa2.setBounds(963, 532, 77, 30);
+		panelModificarParte.add(txtImporteTrabajosMoPa2);
+		
+		comboxTrabajosMoPa3 = new JComboBox();
+		comboxTrabajosMoPa3.setBounds(865, 573, 175, 30);
+		panelModificarParte.add(comboxTrabajosMoPa3);
+		
+		txtCantidadTrabajosMoPa3 = new JTextField();
+		txtCantidadTrabajosMoPa3.setColumns(10);
+		txtCantidadTrabajosMoPa3.setBounds(865, 614, 77, 30);
+		panelModificarParte.add(txtCantidadTrabajosMoPa3);
+		
+		txtImporteTrabajosMoPa3 = new JTextField();
+		txtImporteTrabajosMoPa3.setColumns(10);
+		txtImporteTrabajosMoPa3.setBounds(963, 614, 77, 30);
+		panelModificarParte.add(txtImporteTrabajosMoPa3);
+		
+		lblAmpliarMoPa1 = new JLabel("New label");
+		lblAmpliarMoPa1.addMouseListener(new LblAmpliarMoPa1MouseListener());
+		lblAmpliarMoPa1.setBounds(405, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa1);
+		
+		lblAmpliarMoPa2 = new JLabel("New label");
+		lblAmpliarMoPa2.addMouseListener(new LblAmpliarMoPa2MouseListener());
+		lblAmpliarMoPa2.setBounds(405, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa2);
+		
+		lblAmpliarMoPa3 = new JLabel("New label");
+		lblAmpliarMoPa3.addMouseListener(new LblAmpliarMoPa3MouseListener());
+		lblAmpliarMoPa3.setBounds(405, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa3);
+		
+		lblAmpliarMoPa4 = new JLabel("New label");
+		lblAmpliarMoPa4.addMouseListener(new LblAmpliarMoPa4MouseListener());
+		lblAmpliarMoPa4.setBounds(620, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa4);
+		
+		lblAmpliarMoPa5 = new JLabel("New label");
+		lblAmpliarMoPa5.addMouseListener(new LblAmpliarMoPa5MouseListener());
+		lblAmpliarMoPa5.setBounds(620, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa5);
+		
+		lblAmpliarMoPa6 = new JLabel("New label");
+		lblAmpliarMoPa6.addMouseListener(new LblAmpliarMoPa6MouseListener());
+		lblAmpliarMoPa6.setBounds(620, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa6);
+		
+		lblAmpliarMoPa7 = new JLabel("New label");
+		lblAmpliarMoPa7.addMouseListener(new LblAmpliarMoPa7MouseListener());
+		lblAmpliarMoPa7.setBounds(835, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa7);
+		
+		lblAmpliarMoPa8 = new JLabel("New label");
+		lblAmpliarMoPa8.addMouseListener(new LblAmpliarMoPa8MouseListener());
+		lblAmpliarMoPa8.setBounds(835, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa8);
+		
+		lblAmpliarMoPa9 = new JLabel("New label");
+		lblAmpliarMoPa9.addMouseListener(new LblAmpliarMoPa9MouseListener());
+		lblAmpliarMoPa9.setBounds(835, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa9);
+		
+		lblAmpliarMoPa10 = new JLabel("New label");
+		lblAmpliarMoPa10.addMouseListener(new LblAmpliarMoPa10MouseListener());
+		lblAmpliarMoPa10.setBounds(1050, 409, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa10);
+		
+		lblAmpliarMoPa11 = new JLabel("New label");
+		lblAmpliarMoPa11.addMouseListener(new LblAmpliarMoPa11MouseListener());
+		lblAmpliarMoPa11.setBounds(1050, 491, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa11);
+		
+		lblAmpliarMoPa12 = new JLabel("New label");
+		lblAmpliarMoPa12.addMouseListener(new LblAmpliarMoPa12MouseListener());
+		lblAmpliarMoPa12.setBounds(1050, 573, 20, 20);
+		panelModificarParte.add(lblAmpliarMoPa12);
+		
+		lblModificarParteInt = new JLabel("Modificar Parte");
+		lblModificarParteInt.setHorizontalAlignment(SwingConstants.CENTER);
+		lblModificarParteInt.setForeground(Color.WHITE);
+		lblModificarParteInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
+		lblModificarParteInt.setBounds(525, 50, 230, 43);
+		panelModificarParte.add(lblModificarParteInt);
+		
+		lblPersonalMoPa = new JLabel("Personal:");
+		lblPersonalMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblPersonalMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblPersonalMoPa.setBounds(200, 368, 215, 30);
+		panelModificarParte.add(lblPersonalMoPa);
+		
+		lblVehiculosMoPa = new JLabel("Vehiculos:");
+		lblVehiculosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblVehiculosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblVehiculosMoPa.setBounds(415, 368, 215, 30);
+		panelModificarParte.add(lblVehiculosMoPa);
+		
+		lblMaterialesMoPa = new JLabel("Materiales:");
+		lblMaterialesMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblMaterialesMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblMaterialesMoPa.setBounds(630, 368, 215, 30);
+		panelModificarParte.add(lblMaterialesMoPa);
+		
+		lblTrabajosMoPa = new JLabel("Trabajos:");
+		lblTrabajosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblTrabajosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblTrabajosMoPa.setBounds(845, 368, 215, 30);
+		panelModificarParte.add(lblTrabajosMoPa);
+		
+		lblProyectoMoPa = new JLabel("Proyecto:");
+		lblProyectoMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblProyectoMoPa.setBounds(200, 180, 150, 30);
+		panelModificarParte.add(lblProyectoMoPa);
+		
+		comboxProyectoMoPa = new JComboBox();
+		comboxProyectoMoPa.addActionListener(new ComboxProyectoMoPaActionListener());
+		comboxProyectoMoPa.setBounds(360, 180, 150, 30);
+		panelModificarParte.add(comboxProyectoMoPa);
+		
+		lblFechaMoPa = new JLabel("Fecha:");
+		lblFechaMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblFechaMoPa.setBounds(750, 180, 150, 30);
+		panelModificarParte.add(lblFechaMoPa);
+		
+		txtFechaMoPa = new JTextField();
+		txtFechaMoPa.setEditable(false);
+		txtFechaMoPa.setColumns(10);
+		txtFechaMoPa.setBounds(910, 180, 150, 30);
+		panelModificarParte.add(txtFechaMoPa);
+		
+		comboxPersonalMoPa1.setVisible(false);
+		txtCantidadPersonalMoPa1.setVisible(false);
+		txtImportePersonalMoPa1.setVisible(false);
+		comboxPersonalMoPa2.setVisible(false);
+		txtCantidadPersonalMoPa2.setVisible(false);
+		txtImportePersonalMoPa2.setVisible(false);
+		comboxPersonalMoPa3.setVisible(false);
+		txtCantidadPersonalMoPa3.setVisible(false);
+		txtImportePersonalMoPa3.setVisible(false);
+		comboxVehiculosMoPa1.setVisible(false);
+		txtCantidadVehiculosMoPa1.setVisible(false);
+		txtImporteVehiculosMoPa1.setVisible(false);
+		comboxVehiculosMoPa2.setVisible(false);
+		txtCantidadVehiculosMoPa2.setVisible(false);
+		txtImporteVehiculosMoPa2.setVisible(false);
+		comboxVehiculosMoPa3.setVisible(false);
+		txtCantidadVehiculosMoPa3.setVisible(false);
+		txtImporteVehiculosMoPa3.setVisible(false);
+		comboxMaterialesMoPa1.setVisible(false);
+		txtCantidadMaterialesMoPa1.setVisible(false);
+		txtImporteMaterialesMoPa1.setVisible(false);
+		comboxMaterialesMoPa2.setVisible(false);
+		txtCantidadMaterialesMoPa2.setVisible(false);
+		txtImporteMaterialesMoPa2.setVisible(false);
+		comboxMaterialesMoPa3.setVisible(false);
+		txtCantidadMaterialesMoPa3.setVisible(false);
+		txtImporteMaterialesMoPa3.setVisible(false);
+		comboxTrabajosMoPa1.setVisible(false);
+		txtCantidadTrabajosMoPa1.setVisible(false);
+		txtImporteTrabajosMoPa1.setVisible(false);
+		comboxTrabajosMoPa2.setVisible(false);
+		txtCantidadTrabajosMoPa2.setVisible(false);
+		txtImporteTrabajosMoPa2.setVisible(false);
+		comboxTrabajosMoPa3.setVisible(false);
+		txtCantidadTrabajosMoPa3.setVisible(false);
+		txtImporteTrabajosMoPa3.setVisible(false);
+		
+		lblAmpliarMoPa2.setVisible(false);
+		lblAmpliarMoPa3.setVisible(false);
+		lblAmpliarMoPa5.setVisible(false);
+		lblAmpliarMoPa6.setVisible(false);
+		lblAmpliarMoPa8.setVisible(false);
+		lblAmpliarMoPa9.setVisible(false);
+		lblAmpliarMoPa11.setVisible(false);
+		lblAmpliarMoPa12.setVisible(false);
+		
+		
+		btnEnviarMoPa = new JButton("Enviar");
+		btnEnviarMoPa.addMouseListener(new BtnEnviarAnPr_2MouseListener());
+		btnEnviarMoPa.setBounds(564, 120, 150, 30);
+		panelModificarParte.add(btnEnviarMoPa);
+		txtFechaMoPa.setText(diaHoyString);
+		
+		panelAnadirParte = new JPanel();
+		panelAnadirParte.setBounds(-12, 54, 1292, 666);
+		contentPane.add(panelAnadirParte);
+		panelAnadirParte.setLayout(null);
+		panelAnadirParte.setOpaque(false);
+		
+		lblAnadirParteInt = new JLabel("Añadir Parte");
+		lblAnadirParteInt.setHorizontalAlignment(SwingConstants.CENTER);
+		lblAnadirParteInt.setForeground(Color.WHITE);
+		lblAnadirParteInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
+		lblAnadirParteInt.setBounds(537, 50, 230, 43);
+		panelAnadirParte.add(lblAnadirParteInt);
+		
+		lblProyectoAnPa = new JLabel("Proyecto:");
+		lblProyectoAnPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblProyectoAnPa.setBounds(212, 180, 150, 30);
+		panelAnadirParte.add(lblProyectoAnPa);
+		
+		lblFechaAnPa = new JLabel("Fecha:");
+		lblFechaAnPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblFechaAnPa.setBounds(762, 181, 150, 28);
+		panelAnadirParte.add(lblFechaAnPa);
+		
+		txtFechaAnPa = new JTextField();
+		txtFechaAnPa.setEditable(false);
+		txtFechaAnPa.setColumns(10);
+		txtFechaAnPa.setBounds(922, 180, 150, 30);
+		panelAnadirParte.add(txtFechaAnPa);
+		
+		comboxProyectoAnPa = new JComboBox();
+		comboxProyectoAnPa.addActionListener(new ComboxProyectoAnPaActionListener());
+		comboxProyectoAnPa.setBounds(372, 180, 150, 30);
+		panelAnadirParte.add(comboxProyectoAnPa);
+		
+		comboxPersonalAnPa1 = new JComboBox();
+		comboxPersonalAnPa1.setBounds(232, 409, 175, 30);
+		panelAnadirParte.add(comboxPersonalAnPa1);
+		
+		txtCantidadPersonalAnPa1 = new JTextField();
+		txtCantidadPersonalAnPa1.setColumns(10);
+		txtCantidadPersonalAnPa1.setBounds(232, 450, 77, 30);
+		panelAnadirParte.add(txtCantidadPersonalAnPa1);
+		
+		txtImportePersonalAnPa1 = new JTextField();
+		txtImportePersonalAnPa1.setColumns(10);
+		txtImportePersonalAnPa1.setBounds(330, 450, 77, 30);
+		panelAnadirParte.add(txtImportePersonalAnPa1);
+		
+		comboxPersonalAnPa2 = new JComboBox();
+		comboxPersonalAnPa2.setBounds(232, 491, 175, 30);
+		panelAnadirParte.add(comboxPersonalAnPa2);
+		
+		txtCantidadPersonalAnPa2 = new JTextField();
+		txtCantidadPersonalAnPa2.setColumns(10);
+		txtCantidadPersonalAnPa2.setBounds(232, 532, 77, 30);
+		panelAnadirParte.add(txtCantidadPersonalAnPa2);
+		
+		txtImportePersonalAnPa2 = new JTextField();
+		txtImportePersonalAnPa2.setColumns(10);
+		txtImportePersonalAnPa2.setBounds(330, 532, 77, 30);
+		panelAnadirParte.add(txtImportePersonalAnPa2);
+		
+		comboxPersonalAnPa3 = new JComboBox();
+		comboxPersonalAnPa3.setBounds(232, 573, 175, 30);
+		panelAnadirParte.add(comboxPersonalAnPa3);
+		
+		txtCantidadPersonalAnPa3 = new JTextField();
+		txtCantidadPersonalAnPa3.setColumns(10);
+		txtCantidadPersonalAnPa3.setBounds(232, 614, 77, 30);
+		panelAnadirParte.add(txtCantidadPersonalAnPa3);
+		
+		txtImportePersonalAnPa3 = new JTextField();
+		txtImportePersonalAnPa3.setColumns(10);
+		txtImportePersonalAnPa3.setBounds(330, 614, 77, 30);
+		panelAnadirParte.add(txtImportePersonalAnPa3);
+		
+		comboxVehiculosAnPa1 = new JComboBox();
+		comboxVehiculosAnPa1.setBounds(447, 409, 175, 30);
+		panelAnadirParte.add(comboxVehiculosAnPa1);
+		
+		txtCantidadVehiculosAnPa1 = new JTextField();
+		txtCantidadVehiculosAnPa1.setColumns(10);
+		txtCantidadVehiculosAnPa1.setBounds(447, 450, 77, 30);
+		panelAnadirParte.add(txtCantidadVehiculosAnPa1);
+		
+		txtImporteVehiculosAnPa1 = new JTextField();
+		txtImporteVehiculosAnPa1.setColumns(10);
+		txtImporteVehiculosAnPa1.setBounds(545, 450, 77, 30);
+		panelAnadirParte.add(txtImporteVehiculosAnPa1);
+		
+		comboxVehiculosAnPa2 = new JComboBox();
+		comboxVehiculosAnPa2.setBounds(447, 491, 175, 30);
+		panelAnadirParte.add(comboxVehiculosAnPa2);
+		
+		txtCantidadVehiculosAnPa2 = new JTextField();
+		txtCantidadVehiculosAnPa2.setColumns(10);
+		txtCantidadVehiculosAnPa2.setBounds(447, 532, 77, 30);
+		panelAnadirParte.add(txtCantidadVehiculosAnPa2);
+		
+		txtImporteVehiculosAnPa2 = new JTextField();
+		txtImporteVehiculosAnPa2.setColumns(10);
+		txtImporteVehiculosAnPa2.setBounds(545, 532, 77, 30);
+		panelAnadirParte.add(txtImporteVehiculosAnPa2);
+		
+		comboxVehiculosAnPa3 = new JComboBox();
+		comboxVehiculosAnPa3.setBounds(447, 573, 175, 30);
+		panelAnadirParte.add(comboxVehiculosAnPa3);
+		
+		txtCantidadVehiculosAnPa3 = new JTextField();
+		txtCantidadVehiculosAnPa3.setColumns(10);
+		txtCantidadVehiculosAnPa3.setBounds(447, 614, 77, 30);
+		panelAnadirParte.add(txtCantidadVehiculosAnPa3);
+		
+		txtImporteVehiculosAnPa3 = new JTextField();
+		txtImporteVehiculosAnPa3.setColumns(10);
+		txtImporteVehiculosAnPa3.setBounds(545, 614, 77, 30);
+		panelAnadirParte.add(txtImporteVehiculosAnPa3);
+		
+		comboxMaterialesAnPa1 = new JComboBox();
+		comboxMaterialesAnPa1.setBounds(662, 409, 175, 30);
+		panelAnadirParte.add(comboxMaterialesAnPa1);
+		
+		txtCantidadMaterialesAnPa1 = new JTextField();
+		txtCantidadMaterialesAnPa1.setColumns(10);
+		txtCantidadMaterialesAnPa1.setBounds(662, 450, 77, 30);
+		panelAnadirParte.add(txtCantidadMaterialesAnPa1);
+		
+		txtImporteMaterialesAnPa1 = new JTextField();
+		txtImporteMaterialesAnPa1.setColumns(10);
+		txtImporteMaterialesAnPa1.setBounds(760, 450, 77, 30);
+		panelAnadirParte.add(txtImporteMaterialesAnPa1);
+		
+		comboxMaterialesAnPa2 = new JComboBox();
+		comboxMaterialesAnPa2.setBounds(662, 491, 175, 30);
+		panelAnadirParte.add(comboxMaterialesAnPa2);
+		
+		txtCantidadMaterialesAnPa2 = new JTextField();
+		txtCantidadMaterialesAnPa2.setColumns(10);
+		txtCantidadMaterialesAnPa2.setBounds(662, 532, 77, 30);
+		panelAnadirParte.add(txtCantidadMaterialesAnPa2);
+		
+		txtImporteMaterialesAnPa2 = new JTextField();
+		txtImporteMaterialesAnPa2.setColumns(10);
+		txtImporteMaterialesAnPa2.setBounds(760, 532, 77, 30);
+		panelAnadirParte.add(txtImporteMaterialesAnPa2);
+		
+		comboxMaterialesAnPa3 = new JComboBox();
+		comboxMaterialesAnPa3.setBounds(662, 573, 175, 30);
+		panelAnadirParte.add(comboxMaterialesAnPa3);
+		
+		txtCantidadMaterialesAnPa3 = new JTextField();
+		txtCantidadMaterialesAnPa3.setColumns(10);
+		txtCantidadMaterialesAnPa3.setBounds(662, 614, 77, 30);
+		panelAnadirParte.add(txtCantidadMaterialesAnPa3);
+		
+		txtImporteMaterialesAnPa3 = new JTextField();
+		txtImporteMaterialesAnPa3.setColumns(10);
+		txtImporteMaterialesAnPa3.setBounds(760, 614, 77, 30);
+		panelAnadirParte.add(txtImporteMaterialesAnPa3);
+		
+		comboxTrabajosAnPa1 = new JComboBox();
+		comboxTrabajosAnPa1.setBounds(877, 409, 175, 30);
+		panelAnadirParte.add(comboxTrabajosAnPa1);
+		
+		txtCantidadTrabajosAnPa1 = new JTextField();
+		txtCantidadTrabajosAnPa1.setColumns(10);
+		txtCantidadTrabajosAnPa1.setBounds(877, 450, 77, 30);
+		panelAnadirParte.add(txtCantidadTrabajosAnPa1);
+		
+		txtImporteTrabajosAnPa1 = new JTextField();
+		txtImporteTrabajosAnPa1.setColumns(10);
+		txtImporteTrabajosAnPa1.setBounds(975, 450, 77, 30);
+		panelAnadirParte.add(txtImporteTrabajosAnPa1);
+		
+		comboxTrabajosAnPa2 = new JComboBox();
+		comboxTrabajosAnPa2.setBounds(877, 491, 175, 30);
+		panelAnadirParte.add(comboxTrabajosAnPa2);
+		
+		txtCantidadTrabajosAnPa2 = new JTextField();
+		txtCantidadTrabajosAnPa2.setColumns(10);
+		txtCantidadTrabajosAnPa2.setBounds(877, 532, 77, 30);
+		panelAnadirParte.add(txtCantidadTrabajosAnPa2);
+		
+		txtImporteTrabajosAnPa2 = new JTextField();
+		txtImporteTrabajosAnPa2.setColumns(10);
+		txtImporteTrabajosAnPa2.setBounds(975, 532, 77, 30);
+		panelAnadirParte.add(txtImporteTrabajosAnPa2);
+		
+		comboxTrabajosAnPa3 = new JComboBox();
+		comboxTrabajosAnPa3.setBounds(877, 573, 175, 30);
+		panelAnadirParte.add(comboxTrabajosAnPa3);
+		
+		txtCantidadTrabajosAnPa3 = new JTextField();
+		txtCantidadTrabajosAnPa3.setColumns(10);
+		txtCantidadTrabajosAnPa3.setBounds(877, 614, 77, 30);
+		panelAnadirParte.add(txtCantidadTrabajosAnPa3);
+		
+		txtImporteTrabajosAnPa3 = new JTextField();
+		txtImporteTrabajosAnPa3.setColumns(10);
+		txtImporteTrabajosAnPa3.setBounds(975, 614, 77, 30);
+		panelAnadirParte.add(txtImporteTrabajosAnPa3);
+		
+		lblAmpliarAnPa1 = new JLabel("New label");
+		lblAmpliarAnPa1.addMouseListener(new LblAmpliarAnPa1MouseListener());
+		lblAmpliarAnPa1.setBounds(417, 409, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa1);
+		
+		lblAmpliarAnPa2 = new JLabel("New label");
+		lblAmpliarAnPa2.addMouseListener(new LblAmpliarAnPa2MouseListener());
+		lblAmpliarAnPa2.setBounds(417, 491, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa2);
+		
+		lblAmpliarAnPa3 = new JLabel("New label");
+		lblAmpliarAnPa3.addMouseListener(new LblAmpliarAnPa3MouseListener());
+		lblAmpliarAnPa3.setBounds(417, 573, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa3);
+		
+		lblAmpliarAnPa4 = new JLabel("New label");
+		lblAmpliarAnPa4.addMouseListener(new LblAmpliarAnPa4MouseListener());
+		lblAmpliarAnPa4.setBounds(632, 409, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa4);
+		
+		lblAmpliarAnPa5 = new JLabel("New label");
+		lblAmpliarAnPa5.addMouseListener(new LblAmpliarAnPa5MouseListener());
+		lblAmpliarAnPa5.setBounds(632, 491, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa5);
+		
+		lblAmpliarAnPa6 = new JLabel("New label");
+		lblAmpliarAnPa6.addMouseListener(new LblAmpliarAnPa6MouseListener());
+		lblAmpliarAnPa6.setBounds(632, 573, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa6);
+		
+		lblAmpliarAnPa7 = new JLabel("New label");
+		lblAmpliarAnPa7.addMouseListener(new LblAmpliarAnPa7MouseListener());
+		lblAmpliarAnPa7.setBounds(847, 409, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa7);
+		
+		lblAmpliarAnPa8 = new JLabel("New label");
+		lblAmpliarAnPa8.addMouseListener(new LblAmpliarAnPa8MouseListener());
+		lblAmpliarAnPa8.setBounds(847, 491, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa8);
+		
+		lblAmpliarAnPa9 = new JLabel("New label");
+		lblAmpliarAnPa9.addMouseListener(new LblAmpliarAnPa9MouseListener());
+		lblAmpliarAnPa9.setBounds(847, 573, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa9);
+		
+		lblAmpliarAnPa10 = new JLabel("New label");
+		lblAmpliarAnPa10.addMouseListener(new LblAmpliarAnPa10MouseListener());
+		lblAmpliarAnPa10.setBounds(1062, 409, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa10);
+		
+		lblAmpliarAnPa11 = new JLabel("New label");
+		lblAmpliarAnPa11.addMouseListener(new LblAmpliarAnPa11MouseListener());
+		lblAmpliarAnPa11.setBounds(1062, 491, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa11);
+		
+		lblAmpliarAnPa12 = new JLabel("New label");
+		lblAmpliarAnPa12.addMouseListener(new LblAmpliarAnPa12MouseListener());
+		lblAmpliarAnPa12.setBounds(1062, 573, 20, 20);
+		panelAnadirParte.add(lblAmpliarAnPa12);
+		
+		lblPersonalAnPa = new JLabel("Personal:");
+		lblPersonalAnPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblPersonalAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblPersonalAnPa.setBounds(212, 368, 215, 30);
+		panelAnadirParte.add(lblPersonalAnPa);
+		
+		lblVehiculosAnPa = new JLabel("Vehiculos:");
+		lblVehiculosAnPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblVehiculosAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblVehiculosAnPa.setBounds(427, 368, 215, 30);
+		panelAnadirParte.add(lblVehiculosAnPa);
+		
+		lblMaterialesAnPa = new JLabel("Materiales:");
+		lblMaterialesAnPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblMaterialesAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblMaterialesAnPa.setBounds(642, 368, 215, 30);
+		panelAnadirParte.add(lblMaterialesAnPa);
+		
+		lblTrabajosAnPa = new JLabel("Trabajos:");
+		lblTrabajosAnPa.setHorizontalAlignment(SwingConstants.CENTER);
+		lblTrabajosAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblTrabajosAnPa.setBounds(857, 368, 215, 30);
+		panelAnadirParte.add(lblTrabajosAnPa);
+		
+		
+		//
+		
+		//
+		comboxPersonalAnPa1.setVisible(false);
+		txtCantidadPersonalAnPa1.setVisible(false);
+		txtImportePersonalAnPa1.setVisible(false);
+		comboxPersonalAnPa2.setVisible(false);
+		txtCantidadPersonalAnPa2.setVisible(false);
+		txtImportePersonalAnPa2.setVisible(false);
+		comboxPersonalAnPa3.setVisible(false);
+		txtCantidadPersonalAnPa3.setVisible(false);
+		txtImportePersonalAnPa3.setVisible(false);
+		comboxVehiculosAnPa1.setVisible(false);
+		txtCantidadVehiculosAnPa1.setVisible(false);
+		txtImporteVehiculosAnPa1.setVisible(false);
+		comboxVehiculosAnPa2.setVisible(false);
+		txtCantidadVehiculosAnPa2.setVisible(false);
+		txtImporteVehiculosAnPa2.setVisible(false);
+		comboxVehiculosAnPa3.setVisible(false);
+		txtCantidadVehiculosAnPa3.setVisible(false);
+		txtImporteVehiculosAnPa3.setVisible(false);
+		comboxMaterialesAnPa1.setVisible(false);
+		txtCantidadMaterialesAnPa1.setVisible(false);
+		txtImporteMaterialesAnPa1.setVisible(false);
+		comboxMaterialesAnPa2.setVisible(false);
+		txtCantidadMaterialesAnPa2.setVisible(false);
+		txtImporteMaterialesAnPa2.setVisible(false);
+		comboxMaterialesAnPa3.setVisible(false);
+		txtCantidadMaterialesAnPa3.setVisible(false);
+		txtImporteMaterialesAnPa3.setVisible(false);
+		comboxTrabajosAnPa1.setVisible(false);
+		txtCantidadTrabajosAnPa1.setVisible(false);
+		txtImporteTrabajosAnPa1.setVisible(false);
+		comboxTrabajosAnPa2.setVisible(false);
+		txtCantidadTrabajosAnPa2.setVisible(false);
+		txtImporteTrabajosAnPa2.setVisible(false);
+		comboxTrabajosAnPa3.setVisible(false);
+		txtCantidadTrabajosAnPa3.setVisible(false);
+		txtImporteTrabajosAnPa3.setVisible(false);
+		
+		lblAmpliarAnPa2.setVisible(false);
+		lblAmpliarAnPa3.setVisible(false);
+		lblAmpliarAnPa5.setVisible(false);
+		lblAmpliarAnPa6.setVisible(false);
+		lblAmpliarAnPa8.setVisible(false);
+		lblAmpliarAnPa9.setVisible(false);
+		lblAmpliarAnPa11.setVisible(false);
+		lblAmpliarAnPa12.setVisible(false);
+		
+		
+		
+		btnEnviarAnPr_1 = new JButton("Enviar");
+		btnEnviarAnPr_1.addMouseListener(new BtnEnviarAnPr_1MouseListener());
+		btnEnviarAnPr_1.setBounds(576, 120, 150, 30);
+		panelAnadirParte.add(btnEnviarAnPr_1);
 		
 		panelAnadirProyecto = new JPanel();
 		panelAnadirProyecto.setBounds(0, 54, 1280, 666);
@@ -822,684 +2052,6 @@ public class Main extends JFrame {
 		exitAnPr.addMouseListener(new ExitAnPrMouseListener());
 		exitAnPr.setBounds(1070, 267, 20, 20);
 		panelAnadirProyecto.add(exitAnPr);
-		
-		panelModificarParte = new JPanel();
-		panelModificarParte.setBounds(0, 54, 1280, 666);
-		contentPane.add(panelModificarParte);
-		panelModificarParte.setLayout(null);
-		panelModificarParte.setOpaque(false);
-		
-		comboxPersonalMoPa1 = new JComboBox();
-		comboxPersonalMoPa1.setBounds(220, 409, 175, 30);
-		panelModificarParte.add(comboxPersonalMoPa1);
-		
-		txtCantidadPersonalMoPa1 = new JTextField();
-		txtCantidadPersonalMoPa1.setColumns(10);
-		txtCantidadPersonalMoPa1.setBounds(220, 450, 77, 30);
-		panelModificarParte.add(txtCantidadPersonalMoPa1);
-		
-		txtImportePersonalMoPa1 = new JTextField();
-		txtImportePersonalMoPa1.setColumns(10);
-		txtImportePersonalMoPa1.setBounds(318, 450, 77, 30);
-		panelModificarParte.add(txtImportePersonalMoPa1);
-		
-		comboxPersonalMoPa2 = new JComboBox();
-		comboxPersonalMoPa2.setBounds(220, 491, 175, 30);
-		panelModificarParte.add(comboxPersonalMoPa2);
-		
-		txtCantidadPersonalMoPa2 = new JTextField();
-		txtCantidadPersonalMoPa2.setColumns(10);
-		txtCantidadPersonalMoPa2.setBounds(220, 532, 77, 30);
-		panelModificarParte.add(txtCantidadPersonalMoPa2);
-		
-		txtImportePersonalMoPa2 = new JTextField();
-		txtImportePersonalMoPa2.setColumns(10);
-		txtImportePersonalMoPa2.setBounds(318, 532, 77, 30);
-		panelModificarParte.add(txtImportePersonalMoPa2);
-		
-		comboxPersonalMoPa3 = new JComboBox();
-		comboxPersonalMoPa3.setBounds(220, 573, 175, 30);
-		panelModificarParte.add(comboxPersonalMoPa3);
-		
-		txtCantidadPersonalMoPa3 = new JTextField();
-		txtCantidadPersonalMoPa3.setColumns(10);
-		txtCantidadPersonalMoPa3.setBounds(220, 614, 77, 30);
-		panelModificarParte.add(txtCantidadPersonalMoPa3);
-		
-		txtImportePersonalMoPa3 = new JTextField();
-		txtImportePersonalMoPa3.setColumns(10);
-		txtImportePersonalMoPa3.setBounds(318, 614, 77, 30);
-		panelModificarParte.add(txtImportePersonalMoPa3);
-		
-		comboxVehiculosMoPa1 = new JComboBox();
-		comboxVehiculosMoPa1.setBounds(435, 409, 175, 30);
-		panelModificarParte.add(comboxVehiculosMoPa1);
-		
-		txtCantidadVehiculosMoPa1 = new JTextField();
-		txtCantidadVehiculosMoPa1.setColumns(10);
-		txtCantidadVehiculosMoPa1.setBounds(435, 450, 77, 30);
-		panelModificarParte.add(txtCantidadVehiculosMoPa1);
-		
-		txtImporteVehiculosMoPa1 = new JTextField();
-		txtImporteVehiculosMoPa1.setColumns(10);
-		txtImporteVehiculosMoPa1.setBounds(533, 450, 77, 30);
-		panelModificarParte.add(txtImporteVehiculosMoPa1);
-		
-		comboxVehiculosMoPa2 = new JComboBox();
-		comboxVehiculosMoPa2.setBounds(435, 491, 175, 30);
-		panelModificarParte.add(comboxVehiculosMoPa2);
-		
-		txtCantidadVehiculosMoPa2 = new JTextField();
-		txtCantidadVehiculosMoPa2.setColumns(10);
-		txtCantidadVehiculosMoPa2.setBounds(435, 532, 77, 30);
-		panelModificarParte.add(txtCantidadVehiculosMoPa2);
-		
-		txtImporteVehiculosMoPa2 = new JTextField();
-		txtImporteVehiculosMoPa2.setColumns(10);
-		txtImporteVehiculosMoPa2.setBounds(533, 532, 77, 30);
-		panelModificarParte.add(txtImporteVehiculosMoPa2);
-		
-		comboxVehiculosMoPa3 = new JComboBox();
-		comboxVehiculosMoPa3.setBounds(435, 573, 175, 30);
-		panelModificarParte.add(comboxVehiculosMoPa3);
-		
-		txtCantidadVehiculosMoPa3 = new JTextField();
-		txtCantidadVehiculosMoPa3.setColumns(10);
-		txtCantidadVehiculosMoPa3.setBounds(435, 614, 77, 30);
-		panelModificarParte.add(txtCantidadVehiculosMoPa3);
-		
-		txtImporteVehiculosMoPa3 = new JTextField();
-		txtImporteVehiculosMoPa3.setColumns(10);
-		txtImporteVehiculosMoPa3.setBounds(533, 614, 77, 30);
-		panelModificarParte.add(txtImporteVehiculosMoPa3);
-		
-		comboxMaterialesMoPa1 = new JComboBox();
-		comboxMaterialesMoPa1.setBounds(650, 409, 175, 30);
-		panelModificarParte.add(comboxMaterialesMoPa1);
-		
-		txtCantidadMaterialesMoPa1 = new JTextField();
-		txtCantidadMaterialesMoPa1.setColumns(10);
-		txtCantidadMaterialesMoPa1.setBounds(650, 450, 77, 30);
-		panelModificarParte.add(txtCantidadMaterialesMoPa1);
-		
-		txtImporteMaterialesMoPa1 = new JTextField();
-		txtImporteMaterialesMoPa1.setColumns(10);
-		txtImporteMaterialesMoPa1.setBounds(748, 450, 77, 30);
-		panelModificarParte.add(txtImporteMaterialesMoPa1);
-		
-		comboxMaterialesMoPa2 = new JComboBox();
-		comboxMaterialesMoPa2.setBounds(650, 491, 175, 30);
-		panelModificarParte.add(comboxMaterialesMoPa2);
-		
-		txtCantidadMaterialesMoPa2 = new JTextField();
-		txtCantidadMaterialesMoPa2.setColumns(10);
-		txtCantidadMaterialesMoPa2.setBounds(650, 532, 77, 30);
-		panelModificarParte.add(txtCantidadMaterialesMoPa2);
-		
-		txtImporteMaterialesMoPa2 = new JTextField();
-		txtImporteMaterialesMoPa2.setColumns(10);
-		txtImporteMaterialesMoPa2.setBounds(748, 532, 77, 30);
-		panelModificarParte.add(txtImporteMaterialesMoPa2);
-		
-		comboxMaterialesMoPa3 = new JComboBox();
-		comboxMaterialesMoPa3.setBounds(650, 573, 175, 30);
-		panelModificarParte.add(comboxMaterialesMoPa3);
-		
-		txtCantidadMaterialesMoPa3 = new JTextField();
-		txtCantidadMaterialesMoPa3.setColumns(10);
-		txtCantidadMaterialesMoPa3.setBounds(650, 614, 77, 30);
-		panelModificarParte.add(txtCantidadMaterialesMoPa3);
-		
-		txtImporteMaterialesMoPa3 = new JTextField();
-		txtImporteMaterialesMoPa3.setColumns(10);
-		txtImporteMaterialesMoPa3.setBounds(748, 614, 77, 30);
-		panelModificarParte.add(txtImporteMaterialesMoPa3);
-		
-		comboxTrabajosMoPa1 = new JComboBox();
-		comboxTrabajosMoPa1.setBounds(865, 409, 175, 30);
-		panelModificarParte.add(comboxTrabajosMoPa1);
-		
-		txtCantidadTrabajosMoPa1 = new JTextField();
-		txtCantidadTrabajosMoPa1.setColumns(10);
-		txtCantidadTrabajosMoPa1.setBounds(865, 450, 77, 30);
-		panelModificarParte.add(txtCantidadTrabajosMoPa1);
-		
-		txtImporteTrabajosMoPa1 = new JTextField();
-		txtImporteTrabajosMoPa1.setColumns(10);
-		txtImporteTrabajosMoPa1.setBounds(963, 450, 77, 30);
-		panelModificarParte.add(txtImporteTrabajosMoPa1);
-		
-		comboxTrabajosMoPa2 = new JComboBox();
-		comboxTrabajosMoPa2.setBounds(865, 491, 175, 30);
-		panelModificarParte.add(comboxTrabajosMoPa2);
-		
-		txtCantidadTrabajosMoPa2 = new JTextField();
-		txtCantidadTrabajosMoPa2.setColumns(10);
-		txtCantidadTrabajosMoPa2.setBounds(865, 532, 77, 30);
-		panelModificarParte.add(txtCantidadTrabajosMoPa2);
-		
-		txtImporteTrabajosMoPa2 = new JTextField();
-		txtImporteTrabajosMoPa2.setColumns(10);
-		txtImporteTrabajosMoPa2.setBounds(963, 532, 77, 30);
-		panelModificarParte.add(txtImporteTrabajosMoPa2);
-		
-		comboxTrabajosMoPa3 = new JComboBox();
-		comboxTrabajosMoPa3.setBounds(865, 573, 175, 30);
-		panelModificarParte.add(comboxTrabajosMoPa3);
-		
-		txtCantidadTrabajosMoPa3 = new JTextField();
-		txtCantidadTrabajosMoPa3.setColumns(10);
-		txtCantidadTrabajosMoPa3.setBounds(865, 614, 77, 30);
-		panelModificarParte.add(txtCantidadTrabajosMoPa3);
-		
-		txtImporteTrabajosMoPa3 = new JTextField();
-		txtImporteTrabajosMoPa3.setColumns(10);
-		txtImporteTrabajosMoPa3.setBounds(963, 614, 77, 30);
-		panelModificarParte.add(txtImporteTrabajosMoPa3);
-		
-		lblAmpliarMoPa1 = new JLabel("New label");
-		lblAmpliarMoPa1.addMouseListener(new LblAmpliarMoPa1MouseListener());
-		lblAmpliarMoPa1.setBounds(405, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa1);
-		
-		lblAmpliarMoPa2 = new JLabel("New label");
-		lblAmpliarMoPa2.addMouseListener(new LblAmpliarMoPa2MouseListener());
-		lblAmpliarMoPa2.setBounds(405, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa2);
-		
-		lblAmpliarMoPa3 = new JLabel("New label");
-		lblAmpliarMoPa3.addMouseListener(new LblAmpliarMoPa3MouseListener());
-		lblAmpliarMoPa3.setBounds(405, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa3);
-		
-		lblAmpliarMoPa4 = new JLabel("New label");
-		lblAmpliarMoPa4.addMouseListener(new LblAmpliarMoPa4MouseListener());
-		lblAmpliarMoPa4.setBounds(620, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa4);
-		
-		lblAmpliarMoPa5 = new JLabel("New label");
-		lblAmpliarMoPa5.addMouseListener(new LblAmpliarMoPa5MouseListener());
-		lblAmpliarMoPa5.setBounds(620, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa5);
-		
-		lblAmpliarMoPa6 = new JLabel("New label");
-		lblAmpliarMoPa6.addMouseListener(new LblAmpliarMoPa6MouseListener());
-		lblAmpliarMoPa6.setBounds(620, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa6);
-		
-		lblAmpliarMoPa7 = new JLabel("New label");
-		lblAmpliarMoPa7.addMouseListener(new LblAmpliarMoPa7MouseListener());
-		lblAmpliarMoPa7.setBounds(835, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa7);
-		
-		lblAmpliarMoPa8 = new JLabel("New label");
-		lblAmpliarMoPa8.addMouseListener(new LblAmpliarMoPa8MouseListener());
-		lblAmpliarMoPa8.setBounds(835, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa8);
-		
-		lblAmpliarMoPa9 = new JLabel("New label");
-		lblAmpliarMoPa9.addMouseListener(new LblAmpliarMoPa9MouseListener());
-		lblAmpliarMoPa9.setBounds(835, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa9);
-		
-		lblAmpliarMoPa10 = new JLabel("New label");
-		lblAmpliarMoPa10.addMouseListener(new LblAmpliarMoPa10MouseListener());
-		lblAmpliarMoPa10.setBounds(1050, 409, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa10);
-		
-		lblAmpliarMoPa11 = new JLabel("New label");
-		lblAmpliarMoPa11.addMouseListener(new LblAmpliarMoPa11MouseListener());
-		lblAmpliarMoPa11.setBounds(1050, 491, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa11);
-		
-		lblAmpliarMoPa12 = new JLabel("New label");
-		lblAmpliarMoPa12.addMouseListener(new LblAmpliarMoPa12MouseListener());
-		lblAmpliarMoPa12.setBounds(1050, 573, 20, 20);
-		panelModificarParte.add(lblAmpliarMoPa12);
-		
-		lblModificarParteInt = new JLabel("Modificar Parte");
-		lblModificarParteInt.setHorizontalAlignment(SwingConstants.CENTER);
-		lblModificarParteInt.setForeground(Color.WHITE);
-		lblModificarParteInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
-		lblModificarParteInt.setBounds(525, 50, 230, 43);
-		panelModificarParte.add(lblModificarParteInt);
-		
-		lblPersonalMoPa = new JLabel("Personal:");
-		lblPersonalMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPersonalMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblPersonalMoPa.setBounds(200, 368, 215, 30);
-		panelModificarParte.add(lblPersonalMoPa);
-		
-		lblVehiculosMoPa = new JLabel("Vehiculos:");
-		lblVehiculosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblVehiculosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblVehiculosMoPa.setBounds(415, 368, 215, 30);
-		panelModificarParte.add(lblVehiculosMoPa);
-		
-		lblMaterialesMoPa = new JLabel("Materiales:");
-		lblMaterialesMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblMaterialesMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblMaterialesMoPa.setBounds(630, 368, 215, 30);
-		panelModificarParte.add(lblMaterialesMoPa);
-		
-		lblTrabajosMoPa = new JLabel("Trabajos:");
-		lblTrabajosMoPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTrabajosMoPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblTrabajosMoPa.setBounds(845, 368, 215, 30);
-		panelModificarParte.add(lblTrabajosMoPa);
-		
-		lblProyectoMoPa = new JLabel("Proyecto:");
-		lblProyectoMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblProyectoMoPa.setBounds(200, 180, 150, 30);
-		panelModificarParte.add(lblProyectoMoPa);
-		
-		comboxProyectoMoPa = new JComboBox();
-		comboxProyectoMoPa.setBounds(360, 180, 150, 30);
-		panelModificarParte.add(comboxProyectoMoPa);
-		
-		lblFechaMoPa = new JLabel("Fecha:");
-		lblFechaMoPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblFechaMoPa.setBounds(750, 180, 150, 30);
-		panelModificarParte.add(lblFechaMoPa);
-		
-		txtFechaMoPa = new JTextField();
-		txtFechaMoPa.setEditable(false);
-		txtFechaMoPa.setColumns(10);
-		txtFechaMoPa.setBounds(910, 180, 150, 30);
-		panelModificarParte.add(txtFechaMoPa);
-		
-		comboxPersonalMoPa1.setVisible(false);
-		txtCantidadPersonalMoPa1.setVisible(false);
-		txtImportePersonalMoPa1.setVisible(false);
-		comboxPersonalMoPa2.setVisible(false);
-		txtCantidadPersonalMoPa2.setVisible(false);
-		txtImportePersonalMoPa2.setVisible(false);
-		comboxPersonalMoPa3.setVisible(false);
-		txtCantidadPersonalMoPa3.setVisible(false);
-		txtImportePersonalMoPa3.setVisible(false);
-		comboxVehiculosMoPa1.setVisible(false);
-		txtCantidadVehiculosMoPa1.setVisible(false);
-		txtImporteVehiculosMoPa1.setVisible(false);
-		comboxVehiculosMoPa2.setVisible(false);
-		txtCantidadVehiculosMoPa2.setVisible(false);
-		txtImporteVehiculosMoPa2.setVisible(false);
-		comboxVehiculosMoPa3.setVisible(false);
-		txtCantidadVehiculosMoPa3.setVisible(false);
-		txtImporteVehiculosMoPa3.setVisible(false);
-		comboxMaterialesMoPa1.setVisible(false);
-		txtCantidadMaterialesMoPa1.setVisible(false);
-		txtImporteMaterialesMoPa1.setVisible(false);
-		comboxMaterialesMoPa2.setVisible(false);
-		txtCantidadMaterialesMoPa2.setVisible(false);
-		txtImporteMaterialesMoPa2.setVisible(false);
-		comboxMaterialesMoPa3.setVisible(false);
-		txtCantidadMaterialesMoPa3.setVisible(false);
-		txtImporteMaterialesMoPa3.setVisible(false);
-		comboxTrabajosMoPa1.setVisible(false);
-		txtCantidadTrabajosMoPa1.setVisible(false);
-		txtImporteTrabajosMoPa1.setVisible(false);
-		comboxTrabajosMoPa2.setVisible(false);
-		txtCantidadTrabajosMoPa2.setVisible(false);
-		txtImporteTrabajosMoPa2.setVisible(false);
-		comboxTrabajosMoPa3.setVisible(false);
-		txtCantidadTrabajosMoPa3.setVisible(false);
-		txtImporteTrabajosMoPa3.setVisible(false);
-		
-		lblAmpliarMoPa2.setVisible(false);
-		lblAmpliarMoPa3.setVisible(false);
-		lblAmpliarMoPa5.setVisible(false);
-		lblAmpliarMoPa6.setVisible(false);
-		lblAmpliarMoPa8.setVisible(false);
-		lblAmpliarMoPa9.setVisible(false);
-		lblAmpliarMoPa11.setVisible(false);
-		lblAmpliarMoPa12.setVisible(false);
-		txtFechaMoPa.setText(diaHoyString);
-		
-		btnEnviarAnPr_2 = new JButton("Enviar");
-		btnEnviarAnPr_2.setBounds(564, 120, 150, 30);
-		panelModificarParte.add(btnEnviarAnPr_2);
-		
-		panelAnadirParte = new JPanel();
-		panelAnadirParte.setBounds(-12, 54, 1292, 666);
-		contentPane.add(panelAnadirParte);
-		panelAnadirParte.setLayout(null);
-		panelAnadirParte.setOpaque(false);
-		
-		lblAnadirParteInt = new JLabel("Añadir Parte");
-		lblAnadirParteInt.setHorizontalAlignment(SwingConstants.CENTER);
-		lblAnadirParteInt.setForeground(Color.WHITE);
-		lblAnadirParteInt.setFont(new Font("Tahoma", Font.PLAIN, 28));
-		lblAnadirParteInt.setBounds(537, 50, 230, 43);
-		panelAnadirParte.add(lblAnadirParteInt);
-		
-		lblProyectoAnPa = new JLabel("Proyecto:");
-		lblProyectoAnPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblProyectoAnPa.setBounds(212, 180, 150, 30);
-		panelAnadirParte.add(lblProyectoAnPa);
-		
-		lblFechaAnPa = new JLabel("Fecha:");
-		lblFechaAnPa.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblFechaAnPa.setBounds(762, 181, 150, 28);
-		panelAnadirParte.add(lblFechaAnPa);
-		
-		txtFechaAnPa = new JTextField();
-		txtFechaAnPa.setEditable(false);
-		txtFechaAnPa.setColumns(10);
-		txtFechaAnPa.setBounds(922, 180, 150, 30);
-		panelAnadirParte.add(txtFechaAnPa);
-		
-		comboxProyectoAnPa = new JComboBox();
-		comboxProyectoAnPa.setBounds(372, 180, 150, 30);
-		panelAnadirParte.add(comboxProyectoAnPa);
-		
-		comboxPersonalAnPa1 = new JComboBox();
-		comboxPersonalAnPa1.setBounds(232, 409, 175, 30);
-		panelAnadirParte.add(comboxPersonalAnPa1);
-		
-		txtCantidadPersonalAnPa1 = new JTextField();
-		txtCantidadPersonalAnPa1.setColumns(10);
-		txtCantidadPersonalAnPa1.setBounds(232, 450, 77, 30);
-		panelAnadirParte.add(txtCantidadPersonalAnPa1);
-		
-		txtImportePersonalAnPa1 = new JTextField();
-		txtImportePersonalAnPa1.setColumns(10);
-		txtImportePersonalAnPa1.setBounds(330, 450, 77, 30);
-		panelAnadirParte.add(txtImportePersonalAnPa1);
-		
-		comboxPersonalAnPa2 = new JComboBox();
-		comboxPersonalAnPa2.setBounds(232, 491, 175, 30);
-		panelAnadirParte.add(comboxPersonalAnPa2);
-		
-		txtCantidadPersonalAnPa2 = new JTextField();
-		txtCantidadPersonalAnPa2.setColumns(10);
-		txtCantidadPersonalAnPa2.setBounds(232, 532, 77, 30);
-		panelAnadirParte.add(txtCantidadPersonalAnPa2);
-		
-		txtImportePersonalAnPa2 = new JTextField();
-		txtImportePersonalAnPa2.setColumns(10);
-		txtImportePersonalAnPa2.setBounds(330, 532, 77, 30);
-		panelAnadirParte.add(txtImportePersonalAnPa2);
-		
-		comboxPersonalAnPa3 = new JComboBox();
-		comboxPersonalAnPa3.setBounds(232, 573, 175, 30);
-		panelAnadirParte.add(comboxPersonalAnPa3);
-		
-		txtCantidadPersonalAnPa3 = new JTextField();
-		txtCantidadPersonalAnPa3.setColumns(10);
-		txtCantidadPersonalAnPa3.setBounds(232, 614, 77, 30);
-		panelAnadirParte.add(txtCantidadPersonalAnPa3);
-		
-		txtImportePersonalAnPa3 = new JTextField();
-		txtImportePersonalAnPa3.setColumns(10);
-		txtImportePersonalAnPa3.setBounds(330, 614, 77, 30);
-		panelAnadirParte.add(txtImportePersonalAnPa3);
-		
-		comboxVehiculosAnPa1 = new JComboBox();
-		comboxVehiculosAnPa1.setBounds(447, 409, 175, 30);
-		panelAnadirParte.add(comboxVehiculosAnPa1);
-		
-		txtCantidadVehiculosAnPa1 = new JTextField();
-		txtCantidadVehiculosAnPa1.setColumns(10);
-		txtCantidadVehiculosAnPa1.setBounds(447, 450, 77, 30);
-		panelAnadirParte.add(txtCantidadVehiculosAnPa1);
-		
-		txtImporteVehiculosAnPa1 = new JTextField();
-		txtImporteVehiculosAnPa1.setColumns(10);
-		txtImporteVehiculosAnPa1.setBounds(545, 450, 77, 30);
-		panelAnadirParte.add(txtImporteVehiculosAnPa1);
-		
-		comboxVehiculosAnPa2 = new JComboBox();
-		comboxVehiculosAnPa2.setBounds(447, 491, 175, 30);
-		panelAnadirParte.add(comboxVehiculosAnPa2);
-		
-		txtCantidadVehiculosAnPa2 = new JTextField();
-		txtCantidadVehiculosAnPa2.setColumns(10);
-		txtCantidadVehiculosAnPa2.setBounds(447, 532, 77, 30);
-		panelAnadirParte.add(txtCantidadVehiculosAnPa2);
-		
-		txtImporteVehiculosAnPa2 = new JTextField();
-		txtImporteVehiculosAnPa2.setColumns(10);
-		txtImporteVehiculosAnPa2.setBounds(545, 532, 77, 30);
-		panelAnadirParte.add(txtImporteVehiculosAnPa2);
-		
-		comboxVehiculosAnPa3 = new JComboBox();
-		comboxVehiculosAnPa3.setBounds(447, 573, 175, 30);
-		panelAnadirParte.add(comboxVehiculosAnPa3);
-		
-		txtCantidadVehiculosAnPa3 = new JTextField();
-		txtCantidadVehiculosAnPa3.setColumns(10);
-		txtCantidadVehiculosAnPa3.setBounds(447, 614, 77, 30);
-		panelAnadirParte.add(txtCantidadVehiculosAnPa3);
-		
-		txtImporteVehiculosAnPa3 = new JTextField();
-		txtImporteVehiculosAnPa3.setColumns(10);
-		txtImporteVehiculosAnPa3.setBounds(545, 614, 77, 30);
-		panelAnadirParte.add(txtImporteVehiculosAnPa3);
-		
-		comboxMaterialesAnPa1 = new JComboBox();
-		comboxMaterialesAnPa1.setBounds(662, 409, 175, 30);
-		panelAnadirParte.add(comboxMaterialesAnPa1);
-		
-		txtCantidadMaterialesAnPa1 = new JTextField();
-		txtCantidadMaterialesAnPa1.setColumns(10);
-		txtCantidadMaterialesAnPa1.setBounds(662, 450, 77, 30);
-		panelAnadirParte.add(txtCantidadMaterialesAnPa1);
-		
-		txtImporteMaterialesAnPa1 = new JTextField();
-		txtImporteMaterialesAnPa1.setColumns(10);
-		txtImporteMaterialesAnPa1.setBounds(760, 450, 77, 30);
-		panelAnadirParte.add(txtImporteMaterialesAnPa1);
-		
-		comboxMaterialesAnPa2 = new JComboBox();
-		comboxMaterialesAnPa2.setBounds(662, 491, 175, 30);
-		panelAnadirParte.add(comboxMaterialesAnPa2);
-		
-		txtCantidadMaterialesAnPa2 = new JTextField();
-		txtCantidadMaterialesAnPa2.setColumns(10);
-		txtCantidadMaterialesAnPa2.setBounds(662, 532, 77, 30);
-		panelAnadirParte.add(txtCantidadMaterialesAnPa2);
-		
-		txtImporteMaterialesAnPa2 = new JTextField();
-		txtImporteMaterialesAnPa2.setColumns(10);
-		txtImporteMaterialesAnPa2.setBounds(760, 532, 77, 30);
-		panelAnadirParte.add(txtImporteMaterialesAnPa2);
-		
-		comboxMaterialesAnPa3 = new JComboBox();
-		comboxMaterialesAnPa3.setBounds(662, 573, 175, 30);
-		panelAnadirParte.add(comboxMaterialesAnPa3);
-		
-		txtCantidadMaterialesAnPa3 = new JTextField();
-		txtCantidadMaterialesAnPa3.setColumns(10);
-		txtCantidadMaterialesAnPa3.setBounds(662, 614, 77, 30);
-		panelAnadirParte.add(txtCantidadMaterialesAnPa3);
-		
-		txtImporteMaterialesAnPa3 = new JTextField();
-		txtImporteMaterialesAnPa3.setColumns(10);
-		txtImporteMaterialesAnPa3.setBounds(760, 614, 77, 30);
-		panelAnadirParte.add(txtImporteMaterialesAnPa3);
-		
-		comboxTrabajosAnPa1 = new JComboBox();
-		comboxTrabajosAnPa1.setBounds(877, 409, 175, 30);
-		panelAnadirParte.add(comboxTrabajosAnPa1);
-		
-		txtCantidadTrabajosAnPa1 = new JTextField();
-		txtCantidadTrabajosAnPa1.setColumns(10);
-		txtCantidadTrabajosAnPa1.setBounds(877, 450, 77, 30);
-		panelAnadirParte.add(txtCantidadTrabajosAnPa1);
-		
-		txtImporteTrabajosAnPa1 = new JTextField();
-		txtImporteTrabajosAnPa1.setColumns(10);
-		txtImporteTrabajosAnPa1.setBounds(975, 450, 77, 30);
-		panelAnadirParte.add(txtImporteTrabajosAnPa1);
-		
-		comboxTrabajosAnPa2 = new JComboBox();
-		comboxTrabajosAnPa2.setBounds(877, 491, 175, 30);
-		panelAnadirParte.add(comboxTrabajosAnPa2);
-		
-		txtCantidadTrabajosAnPa2 = new JTextField();
-		txtCantidadTrabajosAnPa2.setColumns(10);
-		txtCantidadTrabajosAnPa2.setBounds(877, 532, 77, 30);
-		panelAnadirParte.add(txtCantidadTrabajosAnPa2);
-		
-		txtImporteTrabajosAnPa2 = new JTextField();
-		txtImporteTrabajosAnPa2.setColumns(10);
-		txtImporteTrabajosAnPa2.setBounds(975, 532, 77, 30);
-		panelAnadirParte.add(txtImporteTrabajosAnPa2);
-		
-		comboxTrabajosAnPa3 = new JComboBox();
-		comboxTrabajosAnPa3.setBounds(877, 573, 175, 30);
-		panelAnadirParte.add(comboxTrabajosAnPa3);
-		
-		txtCantidadTrabajosAnPa3 = new JTextField();
-		txtCantidadTrabajosAnPa3.setColumns(10);
-		txtCantidadTrabajosAnPa3.setBounds(877, 614, 77, 30);
-		panelAnadirParte.add(txtCantidadTrabajosAnPa3);
-		
-		txtImporteTrabajosAnPa3 = new JTextField();
-		txtImporteTrabajosAnPa3.setColumns(10);
-		txtImporteTrabajosAnPa3.setBounds(975, 614, 77, 30);
-		panelAnadirParte.add(txtImporteTrabajosAnPa3);
-		
-		lblAmpliarAnPa1 = new JLabel("New label");
-		lblAmpliarAnPa1.addMouseListener(new LblAmpliarAnPa1MouseListener());
-		lblAmpliarAnPa1.setBounds(417, 409, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa1);
-		
-		lblAmpliarAnPa2 = new JLabel("New label");
-		lblAmpliarAnPa2.addMouseListener(new LblAmpliarAnPa2MouseListener());
-		lblAmpliarAnPa2.setBounds(417, 491, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa2);
-		
-		lblAmpliarAnPa3 = new JLabel("New label");
-		lblAmpliarAnPa3.addMouseListener(new LblAmpliarAnPa3MouseListener());
-		lblAmpliarAnPa3.setBounds(417, 573, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa3);
-		
-		lblAmpliarAnPa4 = new JLabel("New label");
-		lblAmpliarAnPa4.addMouseListener(new LblAmpliarAnPa4MouseListener());
-		lblAmpliarAnPa4.setBounds(632, 409, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa4);
-		
-		lblAmpliarAnPa5 = new JLabel("New label");
-		lblAmpliarAnPa5.addMouseListener(new LblAmpliarAnPa5MouseListener());
-		lblAmpliarAnPa5.setBounds(632, 491, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa5);
-		
-		lblAmpliarAnPa6 = new JLabel("New label");
-		lblAmpliarAnPa6.addMouseListener(new LblAmpliarAnPa6MouseListener());
-		lblAmpliarAnPa6.setBounds(632, 573, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa6);
-		
-		lblAmpliarAnPa7 = new JLabel("New label");
-		lblAmpliarAnPa7.addMouseListener(new LblAmpliarAnPa7MouseListener());
-		lblAmpliarAnPa7.setBounds(847, 409, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa7);
-		
-		lblAmpliarAnPa8 = new JLabel("New label");
-		lblAmpliarAnPa8.addMouseListener(new LblAmpliarAnPa8MouseListener());
-		lblAmpliarAnPa8.setBounds(847, 491, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa8);
-		
-		lblAmpliarAnPa9 = new JLabel("New label");
-		lblAmpliarAnPa9.addMouseListener(new LblAmpliarAnPa9MouseListener());
-		lblAmpliarAnPa9.setBounds(847, 573, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa9);
-		
-		lblAmpliarAnPa10 = new JLabel("New label");
-		lblAmpliarAnPa10.addMouseListener(new LblAmpliarAnPa10MouseListener());
-		lblAmpliarAnPa10.setBounds(1062, 409, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa10);
-		
-		lblAmpliarAnPa11 = new JLabel("New label");
-		lblAmpliarAnPa11.addMouseListener(new LblAmpliarAnPa11MouseListener());
-		lblAmpliarAnPa11.setBounds(1062, 491, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa11);
-		
-		lblAmpliarAnPa12 = new JLabel("New label");
-		lblAmpliarAnPa12.addMouseListener(new LblAmpliarAnPa12MouseListener());
-		lblAmpliarAnPa12.setBounds(1062, 573, 20, 20);
-		panelAnadirParte.add(lblAmpliarAnPa12);
-		
-		lblPersonalAnPa = new JLabel("Personal:");
-		lblPersonalAnPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPersonalAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblPersonalAnPa.setBounds(212, 368, 215, 30);
-		panelAnadirParte.add(lblPersonalAnPa);
-		
-		lblVehiculosAnPa = new JLabel("Vehiculos:");
-		lblVehiculosAnPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblVehiculosAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblVehiculosAnPa.setBounds(427, 368, 215, 30);
-		panelAnadirParte.add(lblVehiculosAnPa);
-		
-		lblMaterialesAnPa = new JLabel("Materiales:");
-		lblMaterialesAnPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblMaterialesAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblMaterialesAnPa.setBounds(642, 368, 215, 30);
-		panelAnadirParte.add(lblMaterialesAnPa);
-		
-		lblTrabajosAnPa = new JLabel("Trabajos:");
-		lblTrabajosAnPa.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTrabajosAnPa.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		lblTrabajosAnPa.setBounds(857, 368, 215, 30);
-		panelAnadirParte.add(lblTrabajosAnPa);
-		
-		
-		//
-		
-		//
-		comboxPersonalAnPa1.setVisible(false);
-		txtCantidadPersonalAnPa1.setVisible(false);
-		txtImportePersonalAnPa1.setVisible(false);
-		comboxPersonalAnPa2.setVisible(false);
-		txtCantidadPersonalAnPa2.setVisible(false);
-		txtImportePersonalAnPa2.setVisible(false);
-		comboxPersonalAnPa3.setVisible(false);
-		txtCantidadPersonalAnPa3.setVisible(false);
-		txtImportePersonalAnPa3.setVisible(false);
-		comboxVehiculosAnPa1.setVisible(false);
-		txtCantidadVehiculosAnPa1.setVisible(false);
-		txtImporteVehiculosAnPa1.setVisible(false);
-		comboxVehiculosAnPa2.setVisible(false);
-		txtCantidadVehiculosAnPa2.setVisible(false);
-		txtImporteVehiculosAnPa2.setVisible(false);
-		comboxVehiculosAnPa3.setVisible(false);
-		txtCantidadVehiculosAnPa3.setVisible(false);
-		txtImporteVehiculosAnPa3.setVisible(false);
-		comboxMaterialesAnPa1.setVisible(false);
-		txtCantidadMaterialesAnPa1.setVisible(false);
-		txtImporteMaterialesAnPa1.setVisible(false);
-		comboxMaterialesAnPa2.setVisible(false);
-		txtCantidadMaterialesAnPa2.setVisible(false);
-		txtImporteMaterialesAnPa2.setVisible(false);
-		comboxMaterialesAnPa3.setVisible(false);
-		txtCantidadMaterialesAnPa3.setVisible(false);
-		txtImporteMaterialesAnPa3.setVisible(false);
-		comboxTrabajosAnPa1.setVisible(false);
-		txtCantidadTrabajosAnPa1.setVisible(false);
-		txtImporteTrabajosAnPa1.setVisible(false);
-		comboxTrabajosAnPa2.setVisible(false);
-		txtCantidadTrabajosAnPa2.setVisible(false);
-		txtImporteTrabajosAnPa2.setVisible(false);
-		comboxTrabajosAnPa3.setVisible(false);
-		txtCantidadTrabajosAnPa3.setVisible(false);
-		txtImporteTrabajosAnPa3.setVisible(false);
-		
-		lblAmpliarAnPa2.setVisible(false);
-		lblAmpliarAnPa3.setVisible(false);
-		lblAmpliarAnPa5.setVisible(false);
-		lblAmpliarAnPa6.setVisible(false);
-		lblAmpliarAnPa8.setVisible(false);
-		lblAmpliarAnPa9.setVisible(false);
-		lblAmpliarAnPa11.setVisible(false);
-		lblAmpliarAnPa12.setVisible(false);
-		
-		txtFechaAnPa.setText(diaHoyString);
-		txtFechaAnPa.setText(diaHoyString);
-		
-		btnEnviarAnPr_1 = new JButton("Enviar");
-		btnEnviarAnPr_1.setBounds(576, 120, 150, 30);
-		panelAnadirParte.add(btnEnviarAnPr_1);
 		
 		panelListaProyectos = new JPanel();
 		panelListaProyectos.setBounds(0, 54, 1280, 666);
@@ -1987,6 +2539,8 @@ public class Main extends JFrame {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 		diaHoyString = sdf.format(diaHoy);
+		txtFechaAnPa.setText(diaHoyString);
+		txtFechaMoPa.setText(diaHoyString);
 	}
 	
 	private void establecerContrasteOcs() {
@@ -3384,12 +3938,122 @@ public class Main extends JFrame {
 				} else {
 					pr = new Proyecto(textFieldNombreAnPr.getText(), sdfEnviar.format(dateChooserFechaInicioAnPr.getDate()), sdfEnviar.format(dateChooserFechaFinAnPr.getDate()), 0, en.getCod_encargado(), cl.getCod_cliente());
 				}
+				ArrayList<Trabajo> vTrabajos = new ArrayList<Trabajo>();
+				ArrayList<Material> vMateriales = new ArrayList<Material>();
+				ArrayList<Empleado> vPersonal = new ArrayList<Empleado>();
+				ArrayList<Vehiculo> vVehiculos = new ArrayList<Vehiculo>();
+				
+				if (!amp1AnPr) {
+					Empleado emple = (Empleado) comboxPersonalAnPr1.getSelectedItem();
+					try {
+						vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalAnPr1.getText()), Double.parseDouble(txtImportePersonalAnPr1.getText())));
+					} catch (Exception es) {
+						vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+					}
+				}
+				if (!amp2AnPr) {
+					Empleado emple = (Empleado) comboxPersonalAnPr2.getSelectedItem();
+					try {
+						vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalAnPr2.getText()), Double.parseDouble(txtImportePersonalAnPr2.getText())));
+					} catch (Exception es) {
+						vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+					}
+				}
+				if (!amp3AnPr) {
+					Empleado emple = (Empleado) comboxPersonalAnPr3.getSelectedItem();
+					try {
+						vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalAnPr3.getText()), Double.parseDouble(txtImportePersonalAnPr3.getText())));
+					} catch (Exception es) {
+						vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+					}
+				}
+				if (!amp4AnPr) {
+					Vehiculo vehi = (Vehiculo) comboxVehiculosAnPr1.getSelectedItem();
+					try {
+						vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosAnPr1.getText()), Double.parseDouble(txtImporteVehiculosAnPr1.getText())));
+					} catch (Exception es) {
+						vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+					}
+				}
+				if (!amp5AnPr) {
+					Vehiculo vehi = (Vehiculo) comboxVehiculosAnPr2.getSelectedItem();
+					try {
+						vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosAnPr2.getText()), Double.parseDouble(txtImporteVehiculosAnPr2.getText())));
+					} catch (Exception es) {
+						vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+					}
+				}
+				if (!amp6AnPr) {
+					Vehiculo vehi = (Vehiculo) comboxVehiculosAnPr3.getSelectedItem();
+					try {
+						vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosAnPr3.getText()), Double.parseDouble(txtImporteVehiculosAnPr3.getText())));
+					} catch (Exception es) {
+						vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+					}
+				}
+				if (!amp7AnPr) {
+					Material mate = (Material) comboxMaterialesAnPr1.getSelectedItem();
+					try {
+						vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesAnPr1.getText()), Double.parseDouble(txtImporteMaterialesAnPr1.getText())));
+					} catch (Exception es) {
+						vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+					}
+				}
+				if (!amp8AnPr) {
+					Material mate = (Material) comboxMaterialesAnPr2.getSelectedItem();
+					try {
+						vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesAnPr2.getText()), Double.parseDouble(txtImporteMaterialesAnPr2.getText())));
+					} catch (Exception es) {
+						vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+					}
+				}
+				if (!amp9AnPr) {
+					Material mate = (Material) comboxMaterialesAnPr3.getSelectedItem();
+					try {
+						vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesAnPr3.getText()), Double.parseDouble(txtImporteMaterialesAnPr3.getText())));
+					} catch (Exception es) {
+						vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+					}
+				}
+				if (!amp10AnPr) {
+					Trabajo trab = (Trabajo) comboxTrabajosAnPr1.getSelectedItem();
+					try {
+						vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosAnPr1.getText()), Double.parseDouble(txtImporteTrabajosAnPr1.getText())));
+					} catch (Exception es) {
+						vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+					}
+				}
+				if (!amp11AnPr) {
+					Trabajo trab = (Trabajo) comboxTrabajosAnPr2.getSelectedItem();
+					try {
+						vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosAnPr2.getText()), Double.parseDouble(txtImporteTrabajosAnPr2.getText())));
+					} catch (Exception es) {
+						vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+					}
+				}
+				if (!amp12AnPr) {
+					Trabajo trab = (Trabajo) comboxTrabajosAnPr3.getSelectedItem();
+					try {
+						vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosAnPr3.getText()), Double.parseDouble(txtImporteTrabajosAnPr3.getText())));
+					} catch (Exception es) {
+						vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+					}
+				}
+				
 				db.insertarProyecto(pr);
+				int cod_proyecto = db.obtenerCodProyecto();
+				db.insertarEstimacionTrabajo(cod_proyecto, vTrabajos);
+				db.insertarEstimacionEmpleado(cod_proyecto, vPersonal);
+				db.insertarEstimacionMaterial(cod_proyecto, vMateriales);
+				db.insertarEstimacionVehiculo(cod_proyecto, vVehiculos);
 				JOptionPane.showMessageDialog(null, "Datos insertados con éxito");
 				actualizarProyectos();
 			} else {
 				JOptionPane.showMessageDialog(null, "Error, inserte los datos necesarios");
 			}
+			
+			
+			
 		}
 	}
 	private class ExitAnPrMouseListener extends MouseAdapter {
@@ -3403,6 +4067,255 @@ public class Main extends JFrame {
 				deshabilitarBoton = true;
 			}
 			
+		}
+	}
+	private class BtnEnviarAnPr_1MouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			ArrayList<Trabajo> vTrabajos = new ArrayList<Trabajo>();
+			ArrayList<Material> vMateriales = new ArrayList<Material>();
+			ArrayList<Empleado> vPersonal = new ArrayList<Empleado>();
+			ArrayList<Vehiculo> vVehiculos = new ArrayList<Vehiculo>();
+			
+			if (!amp1AnPa) {
+				Empleado emple = (Empleado) comboxPersonalAnPr1.getSelectedItem();
+				try {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalAnPa1.getText()), Double.parseDouble(txtImportePersonalAnPa1.getText())));
+				} catch (Exception es) {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+				}
+			}
+			if (!amp2AnPa) {
+				Empleado emple = (Empleado) comboxPersonalAnPa2.getSelectedItem();
+				try {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalAnPa2.getText()), Double.parseDouble(txtImportePersonalAnPa2.getText())));
+				} catch (Exception es) {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+				}
+			}
+			if (!amp3AnPa) {
+				Empleado emple = (Empleado) comboxPersonalAnPa3.getSelectedItem();
+				try {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalAnPa3.getText()), Double.parseDouble(txtImportePersonalAnPa3.getText())));
+				} catch (Exception es) {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+				}
+			}
+			if (!amp4AnPa) {
+				Vehiculo vehi = (Vehiculo) comboxVehiculosAnPa1.getSelectedItem();
+				try {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosAnPa1.getText()), Double.parseDouble(txtImporteVehiculosAnPa1.getText())));
+				} catch (Exception es) {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+				}
+			}
+			if (!amp5AnPa) {
+				Vehiculo vehi = (Vehiculo) comboxVehiculosAnPa2.getSelectedItem();
+				try {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosAnPa2.getText()), Double.parseDouble(txtImporteVehiculosAnPa2.getText())));
+				} catch (Exception es) {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+				}
+			}
+			if (!amp6AnPa) {
+				Vehiculo vehi = (Vehiculo) comboxVehiculosAnPa3.getSelectedItem();
+				try {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosAnPa3.getText()), Double.parseDouble(txtImporteVehiculosAnPa3.getText())));
+				} catch (Exception es) {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+				}
+			}
+			if (!amp7AnPa) {
+				Material mate = (Material) comboxMaterialesAnPa1.getSelectedItem();
+				try {
+					vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesAnPa1.getText()), Double.parseDouble(txtImporteMaterialesAnPa1.getText())));
+				} catch (Exception es) {
+					vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+				}
+			}
+			if (!amp8AnPa) {
+				Material mate = (Material) comboxMaterialesAnPa2.getSelectedItem();
+				try {
+					vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesAnPa2.getText()), Double.parseDouble(txtImporteMaterialesAnPa2.getText())));
+				} catch (Exception es) {
+					vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+				}
+			}
+			if (!amp9AnPa) {
+				Material mate = (Material) comboxMaterialesAnPa3.getSelectedItem();
+				try {
+					vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesAnPa3.getText()), Double.parseDouble(txtImporteMaterialesAnPa3.getText())));
+				} catch (Exception es) {
+					vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+				}
+			}
+			if (!amp10AnPa) {
+				Trabajo trab = (Trabajo) comboxTrabajosAnPa1.getSelectedItem();
+				try {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosAnPa1.getText()), Double.parseDouble(txtImporteTrabajosAnPa1.getText())));
+				} catch (Exception es) {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+				}
+			}
+			if (!amp11AnPa) {
+				Trabajo trab = (Trabajo) comboxTrabajosAnPa2.getSelectedItem();
+				try {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosAnPa2.getText()), Double.parseDouble(txtImporteTrabajosAnPa2.getText())));
+				} catch (Exception es) {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+				}
+			}
+			if (!amp12AnPa) {
+				Trabajo trab = (Trabajo) comboxTrabajosAnPa3.getSelectedItem();
+				try {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosAnPa3.getText()), Double.parseDouble(txtImporteTrabajosAnPa3.getText())));
+				} catch (Exception es) {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+				}
+			}
+			Proyecto pr = (Proyecto) comboxProyectoAnPa.getSelectedItem();
+			try {
+				db.insertarParteProyecto(pr.getCod_proyecto());
+				db.insertarParteEmpleado(pr.getCod_proyecto(), vPersonal);
+				db.insertarParteMaterial(pr.getCod_proyecto(), vMateriales);
+				db.insertarParteTrabajo(pr.getCod_proyecto(), vTrabajos);
+				db.insertarParteVehiculo(pr.getCod_proyecto(), vVehiculos);
+				JOptionPane.showMessageDialog(null, "Datos insertados con éxito");
+			} catch (Exception E) {
+				JOptionPane.showMessageDialog(null, "Ha ocurrido un error");
+			}
+			
+		}
+	}
+	private class ComboxProyectoAnPaActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			
+		}
+	}
+	private class BtnEnviarAnPr_2MouseListener extends MouseAdapter {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			ArrayList<Trabajo> vTrabajos = new ArrayList<Trabajo>();
+			ArrayList<Material> vMateriales = new ArrayList<Material>();
+			ArrayList<Empleado> vPersonal = new ArrayList<Empleado>();
+			ArrayList<Vehiculo> vVehiculos = new ArrayList<Vehiculo>();
+			
+			if (!amp1MoPa) {
+				Empleado emple = (Empleado) comboxPersonalMoPa1.getSelectedItem();
+				try {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalMoPa1.getText()), Double.parseDouble(txtImportePersonalMoPa1.getText())));
+				} catch (Exception es) {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+				}
+			}
+			if (!amp2MoPa) {
+				Empleado emple = (Empleado) comboxPersonalMoPa2.getSelectedItem();
+				try {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalMoPa2.getText()), Double.parseDouble(txtImportePersonalMoPa2.getText())));
+				} catch (Exception es) {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+				}
+			}
+			if (!amp3MoPa) {
+				Empleado emple = (Empleado) comboxPersonalMoPa3.getSelectedItem();
+				try {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), Integer.parseInt(txtCantidadPersonalMoPa3.getText()), Double.parseDouble(txtImportePersonalMoPa3.getText())));
+				} catch (Exception es) {
+					vPersonal.add(new Empleado(emple.getCod_encargado(), 0, 0));
+				}
+			}
+			if (!amp4MoPa) {
+				Vehiculo vehi = (Vehiculo) comboxVehiculosMoPa1.getSelectedItem();
+				try {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosMoPa1.getText()), Double.parseDouble(txtImporteVehiculosMoPa1.getText())));
+				} catch (Exception es) {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+				}
+			}
+			if (!amp5MoPa) {
+				Vehiculo vehi = (Vehiculo) comboxVehiculosMoPa2.getSelectedItem();
+				try {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosMoPa2.getText()), Double.parseDouble(txtImporteVehiculosMoPa2.getText())));
+				} catch (Exception es) {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+				}
+			}
+			if (!amp6MoPa) {
+				Vehiculo vehi = (Vehiculo) comboxVehiculosMoPa3.getSelectedItem();
+				try {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), Integer.parseInt(txtCantidadVehiculosMoPa3.getText()), Double.parseDouble(txtImporteVehiculosMoPa3.getText())));
+				} catch (Exception es) {
+					vVehiculos.add(new Vehiculo(vehi.getMatricula(), 0, 0));
+				}
+			}
+			if (!amp7MoPa) {
+				Material mate = (Material) comboxMaterialesMoPa1.getSelectedItem();
+				try {
+					vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesMoPa1.getText()), Double.parseDouble(txtImporteMaterialesMoPa1.getText())));
+				} catch (Exception es) {
+					vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+				}
+			}
+			if (!amp8MoPa) {
+				Material mate = (Material) comboxMaterialesMoPa2.getSelectedItem();
+				try {
+					vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesMoPa2.getText()), Double.parseDouble(txtImporteMaterialesMoPa2.getText())));
+				} catch (Exception es) {
+					vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+				}
+			}
+			if (!amp9MoPa) {
+				Material mate = (Material) comboxMaterialesMoPa3.getSelectedItem();
+				try {
+					vMateriales.add(new Material(mate.getCod_material(), Integer.parseInt(txtCantidadMaterialesMoPa3.getText()), Double.parseDouble(txtImporteMaterialesMoPa3.getText())));
+				} catch (Exception es) {
+					vMateriales.add(new Material(mate.getCod_material(), 0, 0));
+				}
+			}
+			if (!amp10MoPa) {
+				Trabajo trab = (Trabajo) comboxTrabajosMoPa1.getSelectedItem();
+				try {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosMoPa1.getText()), Double.parseDouble(txtImporteTrabajosMoPa1.getText())));
+				} catch (Exception es) {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+				}
+			}
+			if (!amp11MoPa) {
+				Trabajo trab = (Trabajo) comboxTrabajosMoPa2.getSelectedItem();
+				try {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosMoPa2.getText()), Double.parseDouble(txtImporteTrabajosMoPa2.getText())));
+				} catch (Exception es) {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+				}
+			}
+			if (!amp12MoPa) {
+				Trabajo trab = (Trabajo) comboxTrabajosMoPa3.getSelectedItem();
+				try {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), Integer.parseInt(txtCantidadTrabajosMoPa3.getText()), Double.parseDouble(txtImporteTrabajosMoPa3.getText())));
+				} catch (Exception es) {
+					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
+				}
+			}
+			Proyecto pr = (Proyecto) comboxProyectoAnPa.getSelectedItem();
+			try {
+				System.out.println(pr.getCod_proyecto());
+				db.eliminarPartesEmpleado(pr.getCod_proyecto());
+				db.eliminarPartesMaterial(pr.getCod_proyecto());
+				db.eliminarPartesTrabajo(pr.getCod_proyecto());
+				db.eliminarPartesVehiculo(pr.getCod_proyecto());
+				db.insertarParteEmpleado(pr.getCod_proyecto(), vPersonal);
+				db.insertarParteMaterial(pr.getCod_proyecto(), vMateriales);
+				db.insertarParteTrabajo(pr.getCod_proyecto(), vTrabajos);
+				db.insertarParteVehiculo(pr.getCod_proyecto(), vVehiculos);
+				JOptionPane.showMessageDialog(null, "Datos insertados con éxito");
+			} catch (Exception E) {
+				JOptionPane.showMessageDialog(null, "Ha ocurrido un error");
+			}
+		}
+	}
+	private class ComboxProyectoMoPaActionListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			actualizarDatosMoPa();
 		}
 	}
 	
