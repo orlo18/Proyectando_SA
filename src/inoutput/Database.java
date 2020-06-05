@@ -204,6 +204,41 @@ public class Database {
 		return proy;
     }
 	
+	public ArrayList<Proyecto> devolverProyectosSinParte() {
+    	conectar();
+    	ArrayList<Proyecto> proy = new ArrayList<Proyecto>();
+    	int cod_proyecto;
+    	String nombre_proyecto;
+		PreparedStatement pt = null;
+		ResultSet rs = null;
+		Proyecto pro = null;
+		
+		try {
+			pt = connection.prepareStatement("SELECT * FROM Proyecto WHERE cod_proyecto NOT IN (SELECT cod_proyecto FROM Parte_Proyecto WHERE fecha = current_date());");
+			
+			rs = pt.executeQuery();
+			while (rs.next()){
+				cod_proyecto = rs.getInt("cod_proyecto");
+				nombre_proyecto = rs.getString("nombre_proyecto");
+				pro = new Proyecto(cod_proyecto, nombre_proyecto);
+				proy.add(pro);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		desconectar();
+		return proy;
+    }
+	
 	public ArrayList<Cliente> devolverClientes() {
     	conectar();
     	ArrayList<Cliente> client = new ArrayList<Cliente>();

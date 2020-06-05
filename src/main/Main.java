@@ -338,11 +338,13 @@ public class Main extends JFrame {
 	private JTextField txtFechaFinLsPr;
 	private ArrayList<Proyecto> vProyectos;
 	private ArrayList<Proyecto> vProyectosConParte;
+	private ArrayList<Proyecto> vProyectosSinParte;
 	private ArrayList<Cliente> vClientes;
 	private ArrayList<Material_Peligroso> vMateriales;
 	private ArrayList<Empleado> vEncargados;
 	private ComboBoxModel modeloProyectos;
 	private ComboBoxModel modeloProyectosConParte;
+	private ComboBoxModel modeloProyectosSinParte;
 	private ComboBoxModel modeloClientes;
 	private ComboBoxModel modeloMateriales;
 	private ComboBoxModel modeloEncargados;
@@ -391,10 +393,7 @@ public class Main extends JFrame {
 	
 	private void actualizarProyectos() {
 		vProyectosConParte = db.devolverProyectosConParte();
-		for (Proyecto proyecto : vProyectosConParte) {
-			System.out.println(proyecto.getNombre_proyecto());
-			System.out.println(proyecto.getCod_proyecto());
-		}
+		vProyectosSinParte = db.devolverProyectosSinParte();
 		vProyectos = db.devolverProyectos();
 		vClientes = db.devolverClientes();
 		vMateriales = db.devolverMaterial();
@@ -408,6 +407,7 @@ public class Main extends JFrame {
 		modeloMateriales = new DefaultComboBoxModel(vMateriales.toArray());
 		modeloEncargados = new DefaultComboBoxModel(vEncargados.toArray());
 		modeloProyectosConParte = new DefaultComboBoxModel(vProyectosConParte.toArray());
+		modeloProyectosSinParte = new DefaultComboBoxModel(vProyectosSinParte.toArray());
 		modeloArticulos1 = new DefaultComboBoxModel(vArticulos.toArray());
 		modeloArticulos2 = new DefaultComboBoxModel(vArticulos.toArray());
 		modeloArticulos3 = new DefaultComboBoxModel(vArticulos.toArray());
@@ -425,7 +425,7 @@ public class Main extends JFrame {
 		comboxMaterialTransportarAnPr.setModel(modeloMateriales);
 		comboxJefeAnPr.setModel(modeloEncargados);
 		comboxProyectoLsPr.setModel(modeloProyectos);
-		comboxProyectoAnPa.setModel(modeloProyectos);
+		comboxProyectoAnPa.setModel(modeloProyectosSinParte);
 		//
 		comboxProyectoMoPa.setModel(modeloProyectosConParte);
 		//Combox Personal
