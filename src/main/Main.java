@@ -391,6 +391,10 @@ public class Main extends JFrame {
 	
 	private void actualizarProyectos() {
 		vProyectosConParte = db.devolverProyectosConParte();
+		for (Proyecto proyecto : vProyectosConParte) {
+			System.out.println(proyecto.getNombre_proyecto());
+			System.out.println(proyecto.getCod_proyecto());
+		}
 		vProyectos = db.devolverProyectos();
 		vClientes = db.devolverClientes();
 		vMateriales = db.devolverMaterial();
@@ -511,13 +515,31 @@ public class Main extends JFrame {
 		comboxTrabajosMoPa3.setVisible(false);
 		txtCantidadTrabajosMoPa3.setVisible(false);
 		txtImporteTrabajosMoPa3.setVisible(false);
+		ArrayList<Trabajo> vTrabajos = null;
 		
-		ArrayList<Trabajo> vTrabajos= db.devolverEstimacionTrabajos(pr.getCod_proyecto());
+		try {
+			vTrabajos = db.devolverParteTrabajos(pr.getCod_proyecto());
+		} catch (Exception e) {
+			vTrabajos = new ArrayList<Trabajo>();
+		}
 		
 		
 		for (int i=0;i<vTrabajos.size();i++) {
+			int index = 0;
 			switch (i) {
 				case 0:
+					for (int x=0;x<comboxTrabajosMoPa1.getItemCount();x++) {
+						Trabajo tra = (Trabajo) comboxTrabajosMoPa1.getItemAt(x);
+						if (tra.getCod_trabajo()==(vTrabajos.get(i).getCod_trabajo())) {
+							index = x;
+							break;
+						}
+					}
+					if (!estado) {
+						lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
+					} else {
+						lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\dash.png"));
+					}
 					lblAmpliarMoPa2.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa1.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -528,11 +550,18 @@ public class Main extends JFrame {
 					comboxTrabajosMoPa1.setVisible(true);
 					txtCantidadTrabajosMoPa1.setVisible(true);
 					txtImporteTrabajosMoPa1.setVisible(true);
-					comboxTrabajosMoPa1.setSelectedItem(vTrabajos.get(i));;
+					comboxTrabajosMoPa1.setSelectedItem(new Trabajo(vTrabajos.get(i).getNombre_trabajo(),vTrabajos.get(i).getCod_trabajo()));
 					txtCantidadTrabajosMoPa1.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
 					txtImporteTrabajosMoPa1.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
 					break;
 				case 1:
+					for (int x=0;x<comboxTrabajosMoPa2.getItemCount();x++) {
+						Trabajo tra = (Trabajo) comboxTrabajosMoPa2.getItemAt(x);
+						if (tra.getCod_trabajo()==(vTrabajos.get(i).getCod_trabajo())) {
+							index = x;
+							break;
+						}
+					}
 					lblAmpliarMoPa3.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa2.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -543,11 +572,18 @@ public class Main extends JFrame {
 					comboxTrabajosMoPa2.setVisible(true);
 					txtCantidadTrabajosMoPa2.setVisible(true);
 					txtImporteTrabajosMoPa2.setVisible(true);
-					comboxTrabajosMoPa2.setSelectedItem(vTrabajos.get(i));
+					comboxTrabajosMoPa2.setSelectedItem(new Trabajo(vTrabajos.get(i).getNombre_trabajo(),vTrabajos.get(i).getCod_trabajo()));
 					txtCantidadTrabajosMoPa2.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
 					txtImporteTrabajosMoPa2.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
 					break;
 				case 2:
+					for (int x=0;x<comboxTrabajosMoPa3.getItemCount();x++) {
+						Trabajo tra = (Trabajo) comboxTrabajosMoPa3.getItemAt(x);
+						if (tra.getCod_trabajo()==(vTrabajos.get(i).getCod_trabajo())) {
+							index = x;
+							break;
+						}
+					}
 					if (!estado) {
 						lblAmpliarMoPa3.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
 					} else {
@@ -557,7 +593,7 @@ public class Main extends JFrame {
 					comboxTrabajosMoPa3.setVisible(true);
 					txtCantidadTrabajosMoPa3.setVisible(true);
 					txtImporteTrabajosMoPa3.setVisible(true);
-					comboxTrabajosMoPa3.setSelectedItem(vTrabajos.get(i));
+					comboxTrabajosMoPa3.setSelectedItem(new Trabajo(vTrabajos.get(i).getNombre_trabajo(),vTrabajos.get(i).getCod_trabajo()));
 					txtCantidadTrabajosMoPa3.setText(Integer.toString(vTrabajos.get(i).getCantidad()));
 					txtImporteTrabajosMoPa3.setText(Double.toString(vTrabajos.get(i).getImporte_ud()));
 					break;
@@ -578,11 +614,24 @@ public class Main extends JFrame {
 		txtCantidadMaterialesMoPa3.setVisible(false);
 		txtImporteMaterialesMoPa3.setVisible(false);
 		
-		ArrayList<Material> vMateriales = db.devolverEstimacionMateriales(pr.getCod_proyecto());
+		ArrayList<Material> vMateriales = null;
+		try {
+			vMateriales = db.devolverParteMateriales(pr.getCod_proyecto());
+		} catch (Exception e) {
+			vMateriales = new ArrayList<Material>();
+		}
 		
 		for (int i=0;i<vMateriales.size();i++) {
+			int index = 0;
 			switch (i) {
 				case 0:
+					for (int x=0;x<comboxMaterialesMoPa1.getItemCount();x++) {
+						Material mat = (Material) comboxMaterialesMoPa1.getItemAt(x);
+						if (mat.getCod_material()==(vMateriales.get(i).getCod_material())) {
+							index = x;
+							break;
+						}
+					}
 					lblAmpliarMoPa5.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa4.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -593,11 +642,18 @@ public class Main extends JFrame {
 					comboxMaterialesMoPa1.setVisible(true);
 					txtCantidadMaterialesMoPa1.setVisible(true);
 					txtImporteMaterialesMoPa1.setVisible(true);
-					comboxMaterialesMoPa1.setSelectedItem(vMateriales.get(i));
+					comboxMaterialesMoPa1.setSelectedItem(new Material(vMateriales.get(i).getCod_material()));
 					txtCantidadMaterialesMoPa1.setText(Integer.toString(vMateriales.get(i).getCantidad()));
 					txtImporteMaterialesMoPa1.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
 					break;
 				case 1:
+					for (int x=0;x<comboxMaterialesMoPa2.getItemCount();x++) {
+						Material mat = (Material) comboxMaterialesMoPa2.getItemAt(x);
+						if (mat.getCod_material()==(vMateriales.get(i).getCod_material())) {
+							index = x;
+							break;
+						}
+					}
 					lblAmpliarMoPa6.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa5.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -608,11 +664,18 @@ public class Main extends JFrame {
 					comboxMaterialesMoPa2.setVisible(true);
 					txtCantidadMaterialesMoPa2.setVisible(true);
 					txtImporteMaterialesMoPa2.setVisible(true);
-					comboxMaterialesMoPa2.setSelectedItem(vMateriales.get(i));
+					comboxMaterialesMoPa2.setSelectedItem(new Material(vMateriales.get(i).getCod_material()));
 					txtCantidadMaterialesMoPa2.setText(Integer.toString(vMateriales.get(i).getCantidad()));
 					txtImporteMaterialesMoPa2.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
 					break;
 				case 2:
+					for (int x=0;x<comboxMaterialesMoPa3.getItemCount();x++) {
+						Material mat = (Material) comboxMaterialesMoPa3.getItemAt(x);
+						if (mat.getCod_material()==(vMateriales.get(i).getCod_material())) {
+							index = x;
+							break;
+						}
+					}
 					if (!estado) {
 						lblAmpliarMoPa6.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
 					} else {
@@ -622,7 +685,7 @@ public class Main extends JFrame {
 					comboxMaterialesMoPa3.setVisible(true);
 					txtCantidadMaterialesMoPa3.setVisible(true);
 					txtImporteMaterialesMoPa3.setVisible(true);
-					comboxMaterialesMoPa3.setSelectedItem(vMateriales.get(i));
+					comboxMaterialesMoPa3.setSelectedItem(new Material(vMateriales.get(i).getCod_material()));
 					txtCantidadMaterialesMoPa3.setText(Integer.toString(vMateriales.get(i).getCantidad()));
 					txtImporteMaterialesMoPa3.setText(Double.toString(vMateriales.get(i).getImporte_ud()));
 					break;
@@ -643,11 +706,24 @@ public class Main extends JFrame {
 		txtCantidadPersonalMoPa3.setVisible(false);
 		txtImportePersonalMoPa3.setVisible(false);
 		
-		ArrayList<Empleado> vEmpleados = db.devolverEstimacionEmpleados(pr.getCod_proyecto());
+		ArrayList<Empleado> vEmpleados = null;
+		try {
+			vEmpleados = db.devolverParteEmpleados(pr.getCod_proyecto());
+		} catch (Exception e) {
+			vEmpleados = new ArrayList<Empleado>();
+		}
 		
 		for (int i=0;i<vEmpleados.size();i++) {
+			int index = 0;
 			switch (i) {
 				case 0:
+					for (int x=0;x<comboxPersonalMoPa1.getItemCount();x++) {
+						Empleado emp = (Empleado) comboxPersonalMoPa1.getItemAt(x);
+						if (emp.getCod_encargado()==(vEmpleados.get(i).getCod_encargado())) {
+							index = x;
+							break;
+						}
+					}
 					lblAmpliarMoPa8.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa7.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -663,6 +739,13 @@ public class Main extends JFrame {
 					txtImportePersonalMoPa1.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
 					break;
 				case 1:
+					for (int x=0;x<comboxPersonalMoPa2.getItemCount();x++) {
+						Empleado emp = (Empleado) comboxPersonalMoPa2.getItemAt(x);
+						if (emp.getCod_encargado()==(vEmpleados.get(i).getCod_encargado())) {
+							index = x;
+							break;
+						}
+					}
 					lblAmpliarMoPa9.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa8.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -678,6 +761,13 @@ public class Main extends JFrame {
 					txtImportePersonalMoPa2.setText(Double.toString(vEmpleados.get(i).getImporte_ud()));
 					break;
 				case 2:
+					for (int x=0;x<comboxPersonalMoPa3.getItemCount();x++) {
+						Empleado emp = (Empleado) comboxPersonalMoPa3.getItemAt(x);
+						if (emp.getCod_encargado()==(vEmpleados.get(i).getCod_encargado())) {
+							index = x;
+							break;
+						}
+					}
 					if (!estado) {
 						lblAmpliarMoPa9.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
 					} else {
@@ -708,11 +798,24 @@ public class Main extends JFrame {
 		txtCantidadVehiculosMoPa3.setVisible(false);
 		txtImporteVehiculosMoPa3.setVisible(false);
 		
-		ArrayList<Vehiculo> vVehiculos = db.devolverEstimacionVehiculos(pr.getCod_proyecto());
+		ArrayList<Vehiculo> vVehiculos = null;
+		try {
+			vVehiculos = db.devolverParteVehiculos(pr.getCod_proyecto());
+		} catch (Exception e) {
+			vVehiculos = new ArrayList<Vehiculo>();
+		}
 		
 		for (int i=0;i<vVehiculos.size();i++) {
+			int index = 0;
 			switch (i) {
 				case 0:
+					for (int x=0;x<comboxVehiculosMoPa1.getItemCount();x++) {
+						Vehiculo veh = (Vehiculo) comboxVehiculosMoPa1.getItemAt(x);
+						if (veh.getMatricula().equals(vVehiculos.get(i).getMatricula())) {
+							index = x;
+							break;
+						}
+					}
 					lblAmpliarMoPa11.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa10.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -723,11 +826,18 @@ public class Main extends JFrame {
 					comboxVehiculosMoPa1.setVisible(true);
 					txtCantidadVehiculosMoPa1.setVisible(true);
 					txtImporteVehiculosMoPa1.setVisible(true);
-					comboxVehiculosMoPa1.setSelectedItem(vVehiculos.get(i));
+					comboxVehiculosMoPa1.setSelectedIndex(index);
 					txtCantidadVehiculosMoPa1.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
 					txtImporteVehiculosMoPa1.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
 					break;
 				case 1:
+					for (int x=0;x<comboxVehiculosMoPa2.getItemCount();x++) {
+						Vehiculo veh = (Vehiculo) comboxVehiculosMoPa2.getItemAt(x);
+						if (veh.getMatricula().equals(vVehiculos.get(i).getMatricula())) {
+							index = x;
+							break;
+						}
+					}
 					lblAmpliarMoPa12.setVisible(true);
 					if (!estado) {
 						lblAmpliarMoPa11.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
@@ -738,11 +848,18 @@ public class Main extends JFrame {
 					comboxVehiculosMoPa2.setVisible(true);
 					txtCantidadVehiculosMoPa2.setVisible(true);
 					txtImporteVehiculosMoPa2.setVisible(true);
-					comboxVehiculosMoPa2.setSelectedItem(vVehiculos.get(i));
+					comboxVehiculosMoPa2.setSelectedIndex(index);
 					txtCantidadVehiculosMoPa2.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
 					txtImporteVehiculosMoPa2.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
 					break;
 				case 2:
+					for (int x=0;x<comboxVehiculosMoPa3.getItemCount();x++) {
+						Vehiculo veh = (Vehiculo) comboxVehiculosMoPa3.getItemAt(x);
+						if (veh.getMatricula().equals(vVehiculos.get(i).getMatricula())) {
+							index = x;
+							break;
+						}
+					}
 					if (!estado) {
 						lblAmpliarMoPa12.setIcon(new ImageIcon(".\\rsrc\\dash_w.png"));
 					} else {
@@ -752,7 +869,7 @@ public class Main extends JFrame {
 					comboxVehiculosMoPa3.setVisible(true);
 					txtCantidadVehiculosMoPa3.setVisible(true);
 					txtImporteVehiculosMoPa3.setVisible(true);
-					comboxVehiculosMoPa3.setSelectedItem(vVehiculos.get(i));
+					comboxVehiculosMoPa3.setSelectedIndex(index);
 					txtCantidadVehiculosMoPa3.setText(Integer.toString(vVehiculos.get(i).getCantidad()));
 					txtImporteVehiculosMoPa3.setText(Double.toString(vVehiculos.get(i).getImporte_ud()));
 					break;
@@ -4296,7 +4413,7 @@ public class Main extends JFrame {
 					vTrabajos.add(new Trabajo(trab.getCod_trabajo(), 0, 0));
 				}
 			}
-			Proyecto pr = (Proyecto) comboxProyectoAnPa.getSelectedItem();
+			Proyecto pr = (Proyecto) comboxProyectoMoPa.getSelectedItem();
 			try {
 				System.out.println(pr.getCod_proyecto());
 				db.eliminarPartesEmpleado(pr.getCod_proyecto());
