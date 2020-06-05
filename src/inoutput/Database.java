@@ -33,9 +33,12 @@ public class Database {
 	
 	private void conectar() {
 		try {
-			connection = DriverManager.getConnection(
+			/**connection = DriverManager.getConnection(
 					"jdbc:mysql://hotel-stefan.cciptjamgvdf.us-east-1.rds.amazonaws.com:3306/proyectandosa?useSSL=false",
-					"eclipse", "Hotel2020!");
+					"eclipse", "Hotel2020!");*/
+			connection = DriverManager.getConnection(
+					"jdbc:mysql://127.0.0.1:3306/proyectandosa?useSSL=false",
+					"root", "Admin1234");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -68,7 +71,7 @@ public class Database {
 			ps.executeUpdate();
 			ps.close();
 		} catch (SQLException e) {
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Error, este usuario ya existe");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -176,11 +179,11 @@ public class Database {
 		Proyecto pro = null;
 		
 		try {
-			pt = connection.prepareStatement("SELECT pr.cod_proyecto, pr.nombre_proyecto FROM Parte_Proyecto p, Proyecto pr WHERE p.cod_proyecto = pr.cod_proyecto AND p.fecha = current_date();");
+			pt = connection.prepareStatement("SELECT p.cod_proyecto, pr.nombre_proyecto FROM Parte_Proyecto p, Proyecto pr WHERE p.cod_proyecto = pr.cod_proyecto AND p.fecha = current_date();");
 			
 			rs = pt.executeQuery();
 			while (rs.next()){
-				cod_proyecto = rs.getInt("pr.cod_proyecto");
+				cod_proyecto = rs.getInt("p.cod_proyecto");
 				nombre_proyecto = rs.getString("pr.nombre_proyecto");
 				pro = new Proyecto(cod_proyecto, nombre_proyecto);
 				proy.add(pro);
@@ -733,6 +736,7 @@ public class Database {
 		PreparedStatement ps = null;
 		try {
 			for (Trabajo trabajo : vTrabajos) {
+				System.out.println(cod_proyecto);
 				ps = connection.prepareStatement("INSERT INTO Parte_Trabajo VALUES (current_date(),?,?,?,?,?);");
 				ps.setInt(1, cod_proyecto);
 				ps.setInt(2, trabajo.getCod_trabajo());
@@ -885,6 +889,8 @@ public class Database {
 		PreparedStatement ps = null;
 		try {
 			ps = connection.prepareStatement("DELETE From Parte_Trabajo WHERE cod_proyecto = ? AND fecha = current_date()");
+			System.out.println("eliminando..."
+					+ "");
 			ps.setInt(1, cod_proyecto);
 			ps.executeUpdate();
 			ps.close();
@@ -958,4 +964,153 @@ public class Database {
 		}
 		desconectar();
 	}
+	
+	public ArrayList<Trabajo> devolverParteTrabajos(int cod_proyecto) {
+    	conectar();
+    	ArrayList<Trabajo> trab = new ArrayList<Trabajo>();
+    	String nombre_trabajo;
+    	int cod_trabajo, cantidad;
+    	double importe_ud;
+		PreparedStatement pt = null;
+		ResultSet rs = null;
+		Trabajo tra = null;
+		
+		try {
+			pt = connection.prepareStatement("SELECT e.*, t.descripcion_trabajo FROM Parte_Trabajo e, Trabajo t  WHERE e.cod_trabajo = t.cod_trabajo AND cod_proyecto = ?");
+			pt.setInt(1, cod_proyecto);
+			rs = pt.executeQuery();
+			while (rs.next()){
+				cod_trabajo = rs.getInt("cod_trabajo");
+				nombre_trabajo = rs.getString("descripcion_trabajo");
+				cantidad = rs.getInt("cantidad");
+				importe_ud = rs.getDouble("importe_ud");
+				tra = new Trabajo(nombre_trabajo, cod_trabajo, cantidad, importe_ud);
+				trab.add(tra);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		desconectar();
+		return trab;
+    }
+	
+	public ArrayList<Material> devolverParteMateriales(int cod_proyecto) {
+    	conectar();
+    	ArrayList<Material> mate = new ArrayList<Material>();
+    	int cod_material, cantidad;
+    	double importe_ud;
+		PreparedStatement pt = null;
+		ResultSet rs = null;
+		Material mat = null;
+		
+		try {
+			pt = connection.prepareStatement("SELECT *FROM Parte_Material WHERE cod_proyecto = ?");
+			pt.setInt(1, cod_proyecto);
+			rs = pt.executeQuery();
+			while (rs.next()){
+				cod_material = rs.getInt("cod_articulo");
+				cantidad = rs.getInt("cantidad");
+				importe_ud = rs.getDouble("importe_ud");
+				mat = new Material(cod_material, cantidad, importe_ud);
+				mate.add(mat);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		desconectar();
+		return mate;
+    }
+	
+	public ArrayList<Empleado> devolverParteEmpleados(int cod_proyecto) {
+    	conectar();
+    	ArrayList<Empleado> empl = new ArrayList<Empleado>();
+    	String nombre_empleado;
+    	int cod_empleado, cantidad;
+    	double importe_ud;
+		PreparedStatement pt = null;
+		ResultSet rs = null;
+		Empleado emp = null;
+		
+		try {
+			pt = connection.prepareStatement("SELECT et.*, e.nombre_empleado FROM Parte_Empleado et, Empleado e  WHERE et.cod_empleado = e.cod_empleado AND cod_proyecto = ?");
+			pt.setInt(1, cod_proyecto);
+			rs = pt.executeQuery();
+			while (rs.next()){
+				cod_empleado = rs.getInt("cod_empleado");
+				nombre_empleado = rs.getString("nombre_empleado");
+				cantidad = rs.getInt("cantidad");
+				importe_ud = rs.getDouble("importe_ud");
+				emp = new Empleado(nombre_empleado, cod_empleado, cantidad, importe_ud);
+				empl.add(emp);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		desconectar();
+		return empl;
+    }
+	
+	public ArrayList<Vehiculo> devolverParteVehiculos(int cod_proyecto) {
+    	conectar();
+    	ArrayList<Vehiculo> vehi = new ArrayList<Vehiculo>();
+    	String matricula;
+    	int cantidad;
+    	double importe_ud;
+		PreparedStatement pt = null;
+		ResultSet rs = null;
+		Vehiculo veh = null;
+		
+		try {
+			pt = connection.prepareStatement("SELECT * FROM Parte_Vehiculo WHERE cod_proyecto = ?");
+			pt.setInt(1, cod_proyecto);
+			rs = pt.executeQuery();
+			while (rs.next()){
+				matricula = rs.getString("matricula");
+				cantidad = rs.getInt("cantidad");
+				importe_ud = rs.getDouble("importe_ud");
+				veh = new Vehiculo(matricula, cantidad, importe_ud);
+				vehi.add(veh);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				rs.close();
+				pt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		desconectar();
+		return vehi;
+    }
 }
